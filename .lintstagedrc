@@ -1,6 +1,6 @@
 {
   "packages/cli/src/**/*.ts": [
-    "pnpm --filter @decade6666/trellis exec eslint --fix",
-    "pnpm --filter @decade6666/trellis exec prettier --write"
+    "pnpm --filter @decade666/trellis exec eslint --fix",
+    "pnpm --filter @decade666/trellis exec prettier --write"
   ]
 }

@@ -1,5 +1,5 @@
 /**
- * mem.ts — CLI wrapper over `@decade6666/trellis-core/mem`.
+ * mem.ts — CLI wrapper over `@decade666/trellis-core/mem`.
  *
  * The reusable retrieval / context-extraction logic lives in core; this file
  * owns only CLI concerns: argument parsing, terminal rendering, the OpenCode
@@ -25,14 +25,14 @@ import {
   MemSessionNotFoundError,
   readMemContext,
   searchMemSessions,
-} from "@decade6666/trellis-core/mem";
+} from "@decade666/trellis-core/mem";
 import type {
   MemFilter,
   MemPhase,
   MemSessionInfo,
   MemSourceFilter,
   MemSourceKind,
-} from "@decade6666/trellis-core/mem";
+} from "@decade666/trellis-core/mem";
 
 // ---------- argv ----------
 

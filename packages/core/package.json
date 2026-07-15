@@ -1,5 +1,5 @@
 {
-  "name": "@decade6666/trellis-core",
+  "name": "@decade666/trellis-core",
   "version": "0.6.8",
   "description": "Trellis core SDK — channel and task domain primitives consumed by the Trellis CLI and downstream Node services",
   "type": "module",
@@ -38,8 +38,7 @@
   ],
   "sideEffects": false,
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "scripts": {
     "build": "pnpm run clean && tsc",

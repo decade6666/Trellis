@@ -1,12 +1,12 @@
 /**
- * Public surface for `@decade6666/trellis-core/mem` — reusable retrieval and
+ * Public surface for `@decade666/trellis-core/mem` — reusable retrieval and
  * dialogue-context extraction over persisted Claude Code / Codex / OpenCode
  * sessions.
  *
  * This subpackage is intentionally NOT re-exported from the root
- * `@decade6666/trellis-core` barrel. Import it explicitly:
+ * `@decade666/trellis-core` barrel. Import it explicitly:
  *
- *   import { searchMemSessions } from "@decade6666/trellis-core/mem";
+ *   import { searchMemSessions } from "@decade666/trellis-core/mem";
  *
  * v1 scope: persisted-session search and context extraction only. It does not
  * read channel / forum / thread event logs and has no cursor / pagination.

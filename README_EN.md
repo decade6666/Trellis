@@ -12,25 +12,23 @@
 </p>
 
 <p align="center">
-<a href="./README.md">简体中文</a> ·
-<strong>English</strong> ·
-<a href="https://docs.trytrellis.app/">Docs</a> ·
-<a href="https://docs.trytrellis.app/start/install-and-first-task">Quick Start</a> ·
-<a href="https://docs.trytrellis.app/advanced/multi-platform">Supported Platforms</a> ·
-<a href="https://docs.trytrellis.app/start/real-world-scenarios">Use Cases</a>
+<sub>This repo is a fork of <a href="https://github.com/mindfold-ai/Trellis">mindfold-ai/Trellis</a> (<code>@decade666/trellis</code>), with optional multi-model collab and related changes.</sub>
 </p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/@decade6666/trellis"><img src="https://img.shields.io/npm/v/@decade6666/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
-<a href="https://www.npmjs.com/package/@decade6666/trellis"><img src="https://img.shields.io/npm/dw/@decade6666/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
+<a href="./README.md">简体中文</a> ·
+<strong>English</strong> ·
+<a href="https://docs.trytrellis.app/">Docs (upstream)</a> ·
+<a href="https://github.com/decade6666/Trellis">Source</a>
+</p>
+
+<p align="center">
+<a href="https://www.npmjs.com/package/@decade666/trellis"><img src="https://img.shields.io/npm/v/@decade666/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
+<a href="https://www.npmjs.com/package/@decade666/trellis"><img src="https://img.shields.io/npm/dw/@decade666/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://github.com/decade6666/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
+<a href="https://github.com/decade6666/Trellis/stargazers"><img src="https://img.shields.io/github/stars/decade6666/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
+<a href="https://github.com/decade6666/Trellis/issues"><img src="https://img.shields.io/github/issues/decade6666/Trellis?style=flat-square&color=e67e22" alt="open issues" /></a>
 <a href="https://docs.trytrellis.app/"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
-<a href="https://discord.com/invite/tWcCZ3aRHc"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/issues"><img src="https://img.shields.io/github/issues/mindfold-ai/Trellis?style=flat-square&color=e67e22" alt="open issues" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/pulls"><img src="https://img.shields.io/github/issues-pr/mindfold-ai/Trellis?style=flat-square&color=9b59b6" alt="open PRs" /></a>
-<a href="https://deepwiki.com/mindfold-ai/Trellis"><img src="https://img.shields.io/badge/Ask-DeepWiki-blue?style=flat-square" alt="Ask DeepWiki" /></a>
-<a href="https://chatgpt.com/?q=Explain+the+project+mindfold-ai/Trellis+on+GitHub"><img src="https://img.shields.io/badge/Ask-ChatGPT-74aa9c?style=flat-square&logo=openai&logoColor=white" alt="Ask ChatGPT" /></a>
 </p>
 
 <p align="center">
@@ -53,47 +51,51 @@
 - **Node.js** >= 18
 - **Python** >= 3.9
 
-## Quick Start
+## Install & Quick Start
 
-```bash
-# 1. Install Trellis
-npm install -g @decade6666/trellis@latest
+> **Package names (scheme D)**  
+> - CLI: `@decade666/trellis`  
+> - SDK: `@decade666/trellis-core`  
+> - **Not** upstream `@mindfoldhq/trellis`. `npx @mindfoldhq/trellis` installs the official package and **does not** include this fork’s collab changes.
 
-# 2. Initialize in your repo
-trellis init -u your-name
-
-# 3. Or initialize with the platforms you actually use
-trellis init --cursor --opencode --codex -u your-name
-```
-
-See the [Quick Start](https://docs.trytrellis.app/start/install-and-first-task) and [Supported Platforms](https://docs.trytrellis.app/advanced/multi-platform) guides for setup details.
-
-
-## Install this fork (`@decade6666/trellis`)
-
-This repository publishes **`@decade6666/trellis`** (CLI) and **`@decade6666/trellis-core`** (SDK) to npm — **not** the upstream `@mindfoldhq/trellis` package.
+### Install from npm (recommended)
 
 ```bash
 # Global install
-npm install -g @decade6666/trellis@latest
+npm install -g @decade666/trellis@latest
 
-# Or run once with npx
-npx @decade6666/trellis@latest init -u your-name
+# Or run once without a global install
+npx @decade666/trellis@latest init -u your-name
 
 # Initialize in an app repo
 cd /path/to/your-app
 trellis init -u your-name
+
+# Or only the platforms you use
+trellis init --cursor --opencode --codex -u your-name
 ```
 
 Upgrade:
 
 ```bash
-npm install -g @decade6666/trellis@latest
+npm install -g @decade666/trellis@latest
 trellis update   # refresh templates in existing projects
 ```
 
-Source: https://github.com/decade6666/Trellis
+### Install from source (dev / before publish)
 
+```bash
+git clone https://github.com/decade6666/Trellis.git
+cd Trellis
+pnpm install
+pnpm build
+npm link -C packages/cli   # links global `trellis` / `tl`
+
+cd /path/to/your-app
+trellis init -u your-name
+```
+
+Upstream usage guides still apply: [Quick Start](https://docs.trytrellis.app/start/install-and-first-task) · [Supported Platforms](https://docs.trytrellis.app/advanced/multi-platform)
 
 ## How to Use
 
@@ -194,19 +196,27 @@ No. `collab.enabled` is off by default. Plan / Implement / Verify / Finish match
 
 </details>
 
-## Star History
+<details>
+<summary><strong>How is this different from official <code>@mindfoldhq/trellis</code>?</strong></summary>
 
-[![Star History Chart](https://api.star-history.com/svg?repos=mindfold-ai/Trellis&type=Date)](https://star-history.com/#mindfold-ai/Trellis&Date)
+| | Official | This fork |
+|--|----------|-----------|
+| npm package | `@mindfoldhq/trellis` | **`@decade666/trellis`** |
+| source | [mindfold-ai/Trellis](https://github.com/mindfold-ai/Trellis) | [decade6666/Trellis](https://github.com/decade6666/Trellis) |
+| multi-model collab | no (unless upstream merges) | yes (off by default; see above) |
+
+Install **`@decade666/trellis`** when you need this fork’s features — not the official package name.
+
+</details>
 
 ## Community & Resources
 
-- [Official Docs](https://docs.trytrellis.app/)
-- [GitHub Issues](https://github.com/mindfold-ai/Trellis/issues)
-- [Discord](https://discord.com/invite/tWcCZ3aRHc)
-- [Tech Blog](https://docs.trytrellis.app/blog)
+- [Upstream docs](https://docs.trytrellis.app/)
+- [This fork on GitHub](https://github.com/decade6666/Trellis)
+- [Issues](https://github.com/decade6666/Trellis/issues)
 
 <p align="center">
-<a href="https://github.com/mindfold-ai/Trellis">Official Repository</a> •
-<a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE">AGPL-3.0 License</a> •
-Built by <a href="https://github.com/mindfold-ai">Mindfold</a>
+<a href="https://github.com/decade6666/Trellis">decade6666/Trellis</a> ·
+fork of <a href="https://github.com/mindfold-ai/Trellis">mindfold-ai/Trellis</a> ·
+<a href="https://github.com/decade6666/Trellis/blob/main/LICENSE">AGPL-3.0</a>
 </p>

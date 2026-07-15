@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Bump @decade6666/trellis and @decade6666/trellis-core to the same next
+ * Bump @decade666/trellis and @decade666/trellis-core to the same next
  * version. Replaces the per-package `pnpm version --no-git-tag-version`
  * calls in the release scripts so the two packages can never drift.
  *
@@ -122,7 +122,7 @@ function main() {
   writeJSON(CLI_PKG, cli);
   // Human message to stderr so stdout stays a clean machine-readable value.
   process.stderr.write(
-    `${GREEN}ok${RESET} bumped @decade6666/trellis and @decade6666/trellis-core (${type}) -> ${next}\n`,
+    `${GREEN}ok${RESET} bumped @decade666/trellis and @decade666/trellis-core (${type}) -> ${next}\n`,
   );
   process.stdout.write(next + "\n");
 }

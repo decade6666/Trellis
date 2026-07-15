@@ -12,25 +12,23 @@
 </p>
 
 <p align="center">
-<strong>简体中文</strong> ·
-<a href="./README_EN.md">English</a> ·
-<a href="https://docs.trytrellis.app/zh">文档</a> ·
-<a href="https://docs.trytrellis.app/zh/start/install-and-first-task">快速开始</a> ·
-<a href="https://docs.trytrellis.app/zh/advanced/multi-platform">支持平台</a> ·
-<a href="https://docs.trytrellis.app/zh/start/real-world-scenarios">使用场景</a>
+<sub>本仓库是 <a href="https://github.com/mindfold-ai/Trellis">mindfold-ai/Trellis</a> 的 fork（<code>@decade666/trellis</code>），额外包含可选多模型协作等改动。</sub>
 </p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/@decade6666/trellis"><img src="https://img.shields.io/npm/v/@decade6666/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
-<a href="https://www.npmjs.com/package/@decade6666/trellis"><img src="https://img.shields.io/npm/dw/@decade6666/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
+<strong>简体中文</strong> ·
+<a href="./README_EN.md">English</a> ·
+<a href="https://docs.trytrellis.app/zh">文档（上游）</a> ·
+<a href="https://github.com/decade6666/Trellis">源码</a>
+</p>
+
+<p align="center">
+<a href="https://www.npmjs.com/package/@decade666/trellis"><img src="https://img.shields.io/npm/v/@decade666/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
+<a href="https://www.npmjs.com/package/@decade666/trellis"><img src="https://img.shields.io/npm/dw/@decade666/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://github.com/decade6666/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
+<a href="https://github.com/decade6666/Trellis/stargazers"><img src="https://img.shields.io/github/stars/decade6666/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
+<a href="https://github.com/decade6666/Trellis/issues"><img src="https://img.shields.io/github/issues/decade6666/Trellis?style=flat-square&color=e67e22" alt="open issues" /></a>
 <a href="https://docs.trytrellis.app/zh"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
-<a href="https://discord.com/invite/tWcCZ3aRHc"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/issues"><img src="https://img.shields.io/github/issues/mindfold-ai/Trellis?style=flat-square&color=e67e22" alt="open issues" /></a>
-<a href="https://github.com/mindfold-ai/Trellis/pulls"><img src="https://img.shields.io/github/issues-pr/mindfold-ai/Trellis?style=flat-square&color=9b59b6" alt="open PRs" /></a>
-<a href="https://deepwiki.com/mindfold-ai/Trellis"><img src="https://img.shields.io/badge/Ask-DeepWiki-blue?style=flat-square" alt="Ask DeepWiki" /></a>
-<a href="https://chatgpt.com/?q=Explain+the+project+mindfold-ai/Trellis+on+GitHub"><img src="https://img.shields.io/badge/Ask-ChatGPT-74aa9c?style=flat-square&logo=openai&logoColor=white" alt="Ask ChatGPT" /></a>
 </p>
 
 <p align="center">
@@ -53,48 +51,52 @@
 - **Node.js** >= 18
 - **Python** >= 3.9
 
-## 快速开始
+## 安装与快速开始
 
-```bash
-# 1. 安装 Trellis
-npm install -g @decade6666/trellis@latest
+> **包名（方案 D）**  
+> - CLI：`@decade666/trellis`  
+> - SDK：`@decade666/trellis-core`  
+> - **不是**官方 `@mindfoldhq/trellis`。`npx @mindfoldhq/trellis` 装到的是上游官方版，**不含**本 fork 的 collab 等改动。
 
-# 2. 在仓库中初始化
-trellis init -u your-name
-
-# 3. 或仅初始化你实际使用的平台
-trellis init --cursor --opencode --codex -u your-name
-```
-
-查看 [快速开始](https://docs.trytrellis.app/zh/start/install-and-first-task) 与 [支持平台](https://docs.trytrellis.app/zh/advanced/multi-platform) 指南以了解详细配置步骤。
-
-
-## 安装本 Fork（`@decade6666/trellis`）
-
-本仓库发布到 npm 的包名是 **`@decade6666/trellis`**（CLI）与 **`@decade6666/trellis-core`**（SDK），**不是**官方的 `@mindfoldhq/trellis`。
+### 从 npm 安装（推荐）
 
 ```bash
 # 全局安装
-npm install -g @decade6666/trellis@latest
+npm install -g @decade666/trellis@latest
 
-# 或 npx 临时运行
-npx @decade6666/trellis@latest init -u your-name
+# 或临时运行（不装全局）
+npx @decade666/trellis@latest init -u your-name
 
 # 在业务项目中初始化
 cd /path/to/your-app
 trellis init -u your-name
+
+# 只初始化你实际用的平台
+trellis init --cursor --opencode --codex -u your-name
 ```
 
 升级：
 
 ```bash
-npm install -g @decade6666/trellis@latest
-# 已有项目再刷新模板
-trellis update
+npm install -g @decade666/trellis@latest
+trellis update   # 刷新已有项目里的模板
 ```
 
-源码：https://github.com/decade6666/Trellis
+### 从源码本地安装（开发 / 未发布时）
 
+```bash
+git clone https://github.com/decade6666/Trellis.git
+cd Trellis
+pnpm install
+pnpm build
+npm link -C packages/cli   # 全局链接 trellis / tl 命令
+
+# 任意业务项目
+cd /path/to/your-app
+trellis init -u your-name
+```
+
+通用用法（上游文档仍适用）：[快速开始](https://docs.trytrellis.app/zh/start/install-and-first-task) · [支持平台](https://docs.trytrellis.app/zh/advanced/multi-platform)
 
 ## 如何使用
 
@@ -192,5 +194,18 @@ collab:
 <summary><strong>多模型协作会不会改变默认行为？</strong></summary>
 
 不会。`collab.enabled` 默认关闭；未开启时 Plan / Implement / Verify / Finish 与原生 Trellis 完全一致。只有显式打开开关，才会走 channel 多模型扇出。
+
+</details>
+
+<details>
+<summary><strong>和官方 <code>@mindfoldhq/trellis</code> 有什么区别？</strong></summary>
+
+| | 官方 | 本 fork |
+|--|------|--------|
+| npm 包 | `@mindfoldhq/trellis` | **`@decade666/trellis`** |
+| 源码 | [mindfold-ai/Trellis](https://github.com/mindfold-ai/Trellis) | [decade6666/Trellis](https://github.com/decade6666/Trellis) |
+| 多模型 collab | 无（除非上游合并） | 有（默认关，见上文） |
+
+需要本 fork 功能时，请安装 `@decade666/trellis`，不要用官方包名。
 
 </details>
