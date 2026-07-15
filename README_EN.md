@@ -21,8 +21,8 @@
 </p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/v/@mindfoldhq/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/dw/@mindfoldhq/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://www.npmjs.com/package/@decade6666/trellis"><img src="https://img.shields.io/npm/v/@decade6666/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
+<a href="https://www.npmjs.com/package/@decade6666/trellis"><img src="https://img.shields.io/npm/dw/@decade6666/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
 <a href="https://docs.trytrellis.app/"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
@@ -57,7 +57,7 @@
 
 ```bash
 # 1. Install Trellis
-npm install -g @mindfoldhq/trellis@latest
+npm install -g @decade6666/trellis@latest
 
 # 2. Initialize in your repo
 trellis init -u your-name
@@ -67,6 +67,33 @@ trellis init --cursor --opencode --codex -u your-name
 ```
 
 See the [Quick Start](https://docs.trytrellis.app/start/install-and-first-task) and [Supported Platforms](https://docs.trytrellis.app/advanced/multi-platform) guides for setup details.
+
+
+## Install this fork (`@decade6666/trellis`)
+
+This repository publishes **`@decade6666/trellis`** (CLI) and **`@decade6666/trellis-core`** (SDK) to npm — **not** the upstream `@mindfoldhq/trellis` package.
+
+```bash
+# Global install
+npm install -g @decade6666/trellis@latest
+
+# Or run once with npx
+npx @decade6666/trellis@latest init -u your-name
+
+# Initialize in an app repo
+cd /path/to/your-app
+trellis init -u your-name
+```
+
+Upgrade:
+
+```bash
+npm install -g @decade6666/trellis@latest
+trellis update   # refresh templates in existing projects
+```
+
+Source: https://github.com/decade6666/Trellis
+
 
 ## How to Use
 

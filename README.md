@@ -21,8 +21,8 @@
 </p>
 
 <p align="center">
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/v/@mindfoldhq/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
-<a href="https://www.npmjs.com/package/@mindfoldhq/trellis"><img src="https://img.shields.io/npm/dw/@mindfoldhq/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
+<a href="https://www.npmjs.com/package/@decade6666/trellis"><img src="https://img.shields.io/npm/v/@decade6666/trellis.svg?style=flat-square&color=2563eb" alt="npm version" /></a>
+<a href="https://www.npmjs.com/package/@decade6666/trellis"><img src="https://img.shields.io/npm/dw/@decade6666/trellis?style=flat-square&color=cb3837&label=downloads" alt="npm downloads" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-16a34a.svg?style=flat-square" alt="license" /></a>
 <a href="https://github.com/mindfold-ai/Trellis/stargazers"><img src="https://img.shields.io/github/stars/mindfold-ai/Trellis?style=flat-square&color=eab308" alt="stars" /></a>
 <a href="https://docs.trytrellis.app/zh"><img src="https://img.shields.io/badge/docs-trytrellis.app-0f766e?style=flat-square" alt="docs" /></a>
@@ -57,7 +57,7 @@
 
 ```bash
 # 1. 安装 Trellis
-npm install -g @mindfoldhq/trellis@latest
+npm install -g @decade6666/trellis@latest
 
 # 2. 在仓库中初始化
 trellis init -u your-name
@@ -67,6 +67,34 @@ trellis init --cursor --opencode --codex -u your-name
 ```
 
 查看 [快速开始](https://docs.trytrellis.app/zh/start/install-and-first-task) 与 [支持平台](https://docs.trytrellis.app/zh/advanced/multi-platform) 指南以了解详细配置步骤。
+
+
+## 安装本 Fork（`@decade6666/trellis`）
+
+本仓库发布到 npm 的包名是 **`@decade6666/trellis`**（CLI）与 **`@decade6666/trellis-core`**（SDK），**不是**官方的 `@mindfoldhq/trellis`。
+
+```bash
+# 全局安装
+npm install -g @decade6666/trellis@latest
+
+# 或 npx 临时运行
+npx @decade6666/trellis@latest init -u your-name
+
+# 在业务项目中初始化
+cd /path/to/your-app
+trellis init -u your-name
+```
+
+升级：
+
+```bash
+npm install -g @decade6666/trellis@latest
+# 已有项目再刷新模板
+trellis update
+```
+
+源码：https://github.com/decade6666/Trellis
+
 
 ## 如何使用
 

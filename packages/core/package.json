@@ -1,6 +1,6 @@
 {
-  "name": "@mindfoldhq/trellis-core",
-  "version": "0.6.7",
+  "name": "@decade6666/trellis-core",
+  "version": "0.6.8",
   "description": "Trellis core SDK — channel and task domain primitives consumed by the Trellis CLI and downstream Node services",
   "type": "module",
   "main": "./dist/index.js",
@@ -73,6 +73,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/mindfold-ai/trellis.git"
-  }
+    "url": "https://github.com/decade6666/Trellis.git"
+  },
+  "bugs": {
+    "url": "https://github.com/decade6666/Trellis/issues"
+  },
+  "homepage": "https://github.com/decade6666/Trellis#readme"
 }
