@@ -53,34 +53,69 @@
 
 ## 安装与快速开始
 
-> **包名（方案 D）**  
-> - CLI：`@decade666/trellis`  
-> - SDK：`@decade666/trellis-core`  
-> - **不是**官方 `@mindfoldhq/trellis`。`npx @mindfoldhq/trellis` 装到的是上游官方版，**不含**本 fork 的 collab 等改动。
+> **包名务必写对**  
+> | 用途 | 正确写法 | 常见写错 |
+> |------|----------|----------|
+> | npm CLI | **`@decade666/trellis`**（3 个 `6`） | `@decade6666/trellis`（4 个 `6`，不存在） |
+> | npm SDK | **`@decade666/trellis-core`** | 同上 |
+> | GitHub 仓库 | `github.com/decade6666/Trellis`（4 个 `6`） | — |
+> | 官方上游包 | `@mindfoldhq/trellis` | 不要用它装本 fork |
+>
+> 本 fork 用 Trellis 原生 channel 提供可选多模型协作（Plan/Implement/Verify），**可替代**「官方 Trellis + 另装 CCG 双模型工作流」的组合；无需再装 `ccg-workflow` 才能做双模型分析/交叉审查。
 
 ### 从 npm 安装（推荐）
 
 ```bash
-# 全局安装
+# 1) 若装过官方版，先卸掉，避免 PATH 里两个 trellis 抢命令
+npm uninstall -g @mindfoldhq/trellis
+
+# 2) 安装本 fork
 npm install -g @decade666/trellis@latest
 
-# 或临时运行（不装全局）
-npx @decade666/trellis@latest init -u your-name
+# 3) 确认版本（应 ≥ 0.6.9）
+trellis --version
 
-# 在业务项目中初始化
+# 4) 业务项目初始化
 cd /path/to/your-app
 trellis init -u your-name
-
-# 只初始化你实际用的平台
+# 或只初始化实际平台
 trellis init --cursor --opencode --codex -u your-name
+```
+
+临时运行（不装全局）：
+
+```bash
+npx @decade666/trellis@latest init -u your-name
 ```
 
 升级：
 
 ```bash
 npm install -g @decade666/trellis@latest
-trellis update   # 刷新已有项目里的模板
+trellis update   # 刷新已有项目里的模板（含 collab 配置注释与 Pattern G/H）
 ```
+
+### 从官方 Trellis / CCG 迁过来
+
+```bash
+# 替换 CLI
+npm uninstall -g @mindfoldhq/trellis
+npm install -g @decade666/trellis@latest
+
+# 已有 .trellis 的项目：刷新模板，不要整目录删掉
+cd /path/to/your-app
+trellis update
+
+# 需要多模型时，编辑 .trellis/config.yaml 打开 collab（见下节）
+# 不必再为「双模型 plan / 交叉审查」单独依赖 CCG 的 /ccg:go 流程
+```
+
+| 能力 | 官方 Trellis | CCG 工作流 | 本 fork |
+|------|--------------|------------|---------|
+| 任务 / Spec / 记忆 | ✅ | 另一套 | ✅（Trellis 主干） |
+| Codex channel 派发 | ✅ | codeagent-wrapper | ✅ 原生 channel |
+| 双模型 plan / 三路 review | ❌ | ✅ | ✅（`collab` 开关，默认关） |
+| 安装命令 | `npm i -g @mindfoldhq/trellis` | `npx ccg-workflow` 等 | **`npm i -g @decade666/trellis`** |
 
 ### 从源码本地安装（开发 / 未发布时）
 
