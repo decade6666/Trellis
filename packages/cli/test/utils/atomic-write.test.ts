@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { writeFileAtomic } from "../../src/utils/atomic-write.js";
 
@@ -12,6 +12,7 @@ describe("writeFileAtomic", () => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), "trellis-atomic-"));
   });
   afterEach(() => {
+    vi.restoreAllMocks();
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
@@ -32,20 +33,19 @@ describe("writeFileAtomic", () => {
   it("preserves the original file when the write fails", () => {
     const f = path.join(dir, "keep.json");
     writeFileAtomic(f, "original");
-    // A directory in place of the temp target's parent is not the failure we
-    // model; instead force a rename failure by pointing at an unwritable dir.
-    const roDir = path.join(dir, "ro");
-    fs.mkdirSync(roDir);
-    const target = path.join(roDir, "x.json");
-    writeFileAtomic(target, "first");
-    fs.chmodSync(roDir, 0o500); // read+execute only, no write
+
+    // chmod-based unwritable dirs are unreliable under root (e.g. Docker as
+    // root ignores directory write bits). Simulate rename failure instead.
+    const renameSpy = vi.spyOn(fs, "renameSync").mockImplementation(() => {
+      throw new Error("EACCES: simulated rename failure");
+    });
     try {
-      expect(() => writeFileAtomic(target, "second")).toThrow();
-      // Original survives; no half-written temp left in the dir.
-      expect(fs.readFileSync(target, "utf-8")).toBe("first");
-      expect(fs.readdirSync(roDir)).toEqual(["x.json"]);
+      expect(() => writeFileAtomic(f, "second")).toThrow(/EACCES|simulated rename/);
+      expect(fs.readFileSync(f, "utf-8")).toBe("original");
+      // temp file cleaned up on best-effort path
+      expect(fs.readdirSync(dir)).toEqual(["keep.json"]);
     } finally {
-      fs.chmodSync(roDir, 0o700);
+      renameSpy.mockRestore();
     }
   });
 });
