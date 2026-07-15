@@ -133,4 +133,13 @@ channel:
 #   codex_led_spec_update: false
 #   second_model:
 #     provider: antigravity
-#     driver: cliproxy
+#     # Default driver: CCG path — codeagent-wrapper --backend agy
+#     driver: codeagent-wrapper
+#     # wrapper_path: ~/.claude/bin/codeagent-wrapper
+#     # wrapper_backend: agy
+#     # Alt: OpenAI-compatible CLIProxyAPI (no agy CLI needed)
+#     # driver: cliproxy
+#     # cliproxy_base_url: "http://127.0.0.1:8317"
+#     # cliproxy_model: gemini-3.5-flash-low
+#     # Prefer env CLIPROXY_API_KEY / TRELLIS_CLIPROXY_API_KEY over yaml
+#     # cliproxy_api_key: ""

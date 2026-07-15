@@ -183,7 +183,7 @@ const codexAdapter: WorkerAdapter<CodexCtx> = {
   },
 };
 
-/** Antigravity adapter — cliproxy-backed Node shim with fail-fast probe. */
+/** Antigravity adapter — codeagent-wrapper→agy (default) or cliproxy HTTP. */
 const antigravityAdapter: WorkerAdapter<AntigravityCtx> = {
   provider: "antigravity",
   buildArgs(view) {

@@ -137,10 +137,27 @@ collab:
   codex_led_spec_update: true
   second_model:
     provider: antigravity
-    driver: cliproxy   # v1 supported driver; requires a reachable CLIProxy
+    # Default: same path as CCG — codeagent-wrapper --backend agy
+    driver: codeagent-wrapper
+    # wrapper_path: ~/.claude/bin/codeagent-wrapper
+    # wrapper_backend: agy
+    # Alt: CLIProxy OpenAI-compatible HTTP (no agy CLI)
+    # driver: cliproxy
+    # cliproxy_base_url: "http://127.0.0.1:8317"
+    # cliproxy_model: gemini-3.5-flash-low
 ```
 
-Recipes live in the `trellis-channel` skill as **Pattern G / Pattern H**. The second model uses the channel `antigravity` provider (cliproxy) in v1 and fails fast when misconfigured.
+Second-model prerequisites:
+
+```bash
+# driver=codeagent-wrapper (default): codeagent-wrapper + agy on PATH
+# Optional: export TRELLIS_CODEAGENT_WRAPPER=~/.claude/bin/codeagent-wrapper
+
+# driver=cliproxy: CLIProxyAPI + env key (do not commit secrets)
+export CLIPROXY_API_KEY="<value from CLIProxyAPI config api-keys>"
+```
+
+Recipes live in the `trellis-channel` skill as **Pattern G / Pattern H**. The channel `antigravity` provider fails fast when the wrapper/agy or cliproxy setup is missing.
 
 ## Resources
 

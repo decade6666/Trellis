@@ -173,10 +173,27 @@ collab:
   codex_led_spec_update: true
   second_model:
     provider: antigravity
-    driver: cliproxy   # v1 可用驱动；需本机 CLIProxy 可达
+    # 默认：CCG 同款线路 → codeagent-wrapper --backend agy → 反重力 CLI
+    driver: codeagent-wrapper
+    # wrapper_path: ~/.claude/bin/codeagent-wrapper
+    # wrapper_backend: agy
+    # 备选：不装 agy 时走 CLIProxy OpenAI 兼容接口
+    # driver: cliproxy
+    # cliproxy_base_url: "http://127.0.0.1:8317"
+    # cliproxy_model: gemini-3.5-flash-low
 ```
 
-配方见 `trellis-channel` skill 的 **Pattern G / Pattern H**。第二模型 v1 走 channel `antigravity` provider（cliproxy）；未配置时 fail-fast，不会半挂死。
+第二模型前置：
+
+```bash
+# driver=codeagent-wrapper（默认）：需 codeagent-wrapper + agy 在 PATH
+# 可选覆盖路径：export TRELLIS_CODEAGENT_WRAPPER=~/.claude/bin/codeagent-wrapper
+
+# driver=cliproxy：需 CLIProxyAPI，鉴权用环境变量（勿提交密钥）
+export CLIPROXY_API_KEY="<CLIProxyAPI config 里 api-keys 列表中的值>"
+```
+
+配方见 `trellis-channel` skill 的 **Pattern G / Pattern H**。第二模型走 channel `antigravity` provider；缺 wrapper/agy 或 cliproxy 不可达时 fail-fast，不会半挂死。
 
 ## 资源
 
