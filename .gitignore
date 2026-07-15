@@ -145,10 +145,14 @@ vite.config.ts.timestamp-*
 .trellis/.ralph-state.json
 
 # Trellis local state (should not be committed)
+# Note: do NOT ignore all of .trellis/ in this monorepo — scripts/spec/agents/workflow are tracked.
 .trellis/.current-task
 .trellis/.runtime/
 .trellis/.developer
 .trellis/hooks.local.json
+.trellis/tasks/
+.trellis/workspace/
+workspace/
 .gitnexus/
 
 # Multi-agent temp files
@@ -168,8 +172,6 @@ __pycache__/
 .pytest_cache/
 
 .reference
-
-.trellis/tasks/01-23-eng-blog-research
 
 # External reference code
 third/

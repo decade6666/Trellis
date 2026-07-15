@@ -166,28 +166,3 @@ collab:
 不会。`collab.enabled` 默认关闭；未开启时 Plan / Implement / Verify / Finish 与原生 Trellis 完全一致。只有显式打开开关，才会走 channel 多模型扇出。
 
 </details>
-
-## Star 历史
-
-[![Star History Chart](https://api.star-history.com/svg?repos=mindfold-ai/Trellis&type=Date)](https://star-history.com/#mindfold-ai/Trellis&Date)
-
-## 社区与资源
-
-- [官方文档](https://docs.trytrellis.app/zh)
-- [GitHub Issues](https://github.com/mindfold-ai/Trellis/issues)
-- [Discord](https://discord.com/invite/tWcCZ3aRHc)
-- [技术博客](https://docs.trytrellis.app/zh/blog)
-
-### 联系我们
-
-<p align="center">
-<img src="assets/wx_link10.jpg" alt="微信群" width="260" />
-&nbsp;&nbsp;&nbsp;&nbsp;
-<img src="assets/feishu-group-qr.jpg" alt="飞书话题群" width="260" />
-</p>
-
-<p align="center">
-<a href="https://github.com/mindfold-ai/Trellis">官方仓库</a> •
-<a href="https://github.com/mindfold-ai/Trellis/blob/main/LICENSE">AGPL-3.0 License</a> •
-由 <a href="https://github.com/mindfold-ai">Mindfold</a> 构建
-</p>
