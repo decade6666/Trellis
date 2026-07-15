@@ -81,6 +81,10 @@ export const gitignoreTemplate = readTemplate("gitignore.txt");
 // and refreshed by `trellis update`.
 export const implementAgentTemplate = readTemplate("agents/implement.md");
 export const checkAgentTemplate = readTemplate("agents/check.md");
+export const analyzeCxAgentTemplate = readTemplate("agents/analyze-cx.md");
+export const analyzeAgyAgentTemplate = readTemplate("agents/analyze-agy.md");
+export const reviewCxAgentTemplate = readTemplate("agents/review-cx.md");
+export const reviewAgyAgentTemplate = readTemplate("agents/review-agy.md");
 
 /**
  * Get all script templates as a map of relative path to content
@@ -136,5 +140,9 @@ export function getAllAgents(): Map<string, string> {
   const agents = new Map<string, string>();
   agents.set("implement.md", implementAgentTemplate);
   agents.set("check.md", checkAgentTemplate);
+  agents.set("analyze-cx.md", analyzeCxAgentTemplate);
+  agents.set("analyze-agy.md", analyzeAgyAgentTemplate);
+  agents.set("review-cx.md", reviewCxAgentTemplate);
+  agents.set("review-agy.md", reviewAgyAgentTemplate);
   return agents;
 }

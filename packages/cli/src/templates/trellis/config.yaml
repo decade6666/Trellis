@@ -108,3 +108,21 @@ channel:
 #
 # codex:
 #   dispatch_mode: inline  # or "sub-agent" to dispatch trellis-* sub-agents
+
+#-------------------------------------------------------------------------------
+# Multi-model collaboration (opt-in; default OFF)
+#-------------------------------------------------------------------------------
+# When collab.enabled is false (default), all collab.* flags are ignored and
+# Trellis behaves exactly as today. Enable only when the project has working
+# second-model drivers and wants dual-model analysis / codex-led implement /
+# three-way cross-review.
+#
+# collab:
+#   enabled: false
+#   dual_model_analysis: false
+#   codex_led_implement: false
+#   cross_review: false
+#   codex_led_spec_update: false
+#   second_model:
+#     provider: antigravity
+#     driver: cliproxy

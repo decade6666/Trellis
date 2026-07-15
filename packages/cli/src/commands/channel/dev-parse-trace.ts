@@ -1,5 +1,9 @@
 import fs from "node:fs";
 
+import {
+  createAntigravityCtx,
+  parseAntigravityLine,
+} from "./adapters/antigravity.js";
 import { parseClaudeLine } from "./adapters/claude.js";
 import { createCodexCtx, parseCodexLine } from "./adapters/codex.js";
 import type { ParseResult } from "./adapters/types.js";
@@ -16,7 +20,10 @@ import type { ParseResult } from "./adapters/types.js";
  * trace; we pre-seed the ctx with the ids the probe used (1 for initialize,
  * 2 for thread/start, 3 for turn/start) so id-matching works.
  */
-export function parseTrace(adapter: "claude" | "codex", file: string): void {
+export function parseTrace(
+  adapter: "claude" | "codex" | "antigravity",
+  file: string,
+): void {
   const raw = fs.readFileSync(file, "utf-8");
   const lines = raw.split("\n");
   let lineNo = 0;
@@ -26,6 +33,17 @@ export function parseTrace(adapter: "claude" | "codex", file: string): void {
       lineNo++;
       if (!line.trim()) continue;
       const result: ParseResult = parseClaudeLine(line);
+      printResult(lineNo, result);
+    }
+    return;
+  }
+
+  if (adapter === "antigravity") {
+    const ctx = createAntigravityCtx();
+    for (const line of lines) {
+      lineNo++;
+      if (!line.trim()) continue;
+      const result = parseAntigravityLine(line, ctx);
       printResult(lineNo, result);
     }
     return;

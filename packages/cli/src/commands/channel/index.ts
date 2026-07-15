@@ -283,7 +283,7 @@ export function registerChannelCommand(program: Command): void {
     )
     .option(
       "--provider <provider>",
-      "worker provider: claude | codex (overrides agent)",
+      "worker provider: claude | codex | antigravity (overrides agent)",
     )
     .option(
       "--as <name>",
@@ -392,7 +392,7 @@ export function registerChannelCommand(program: Command): void {
     )
     .option(
       "--provider <provider>",
-      "worker provider: claude | codex (overrides agent)",
+      "worker provider: claude | codex | antigravity (overrides agent)",
     )
     .option("--as <name>", "worker name (default: agent name if --agent set)")
     .option("--cwd <path>", "worker working directory")

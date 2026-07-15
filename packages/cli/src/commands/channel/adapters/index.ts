@@ -20,6 +20,16 @@ import type { ChildProcessByStdio } from "node:child_process";
 import type { Readable, Writable } from "node:stream";
 
 import {
+  buildAntigravityArgs,
+  createAntigravityCtx,
+  encodeAntigravityInterruptMessage,
+  encodeAntigravityUserMessage,
+  handshakeAntigravity,
+  isAntigravityReady,
+  parseAntigravityLine,
+  type AntigravityCtx,
+} from "./antigravity.js";
+import {
   buildClaudeArgs,
   encodeClaudeInterruptMessage,
   encodeClaudeUserMessage,
@@ -173,6 +183,32 @@ const codexAdapter: WorkerAdapter<CodexCtx> = {
   },
 };
 
+/** Antigravity adapter — cliproxy-backed Node shim with fail-fast probe. */
+const antigravityAdapter: WorkerAdapter<AntigravityCtx> = {
+  provider: "antigravity",
+  buildArgs(view) {
+    return buildAntigravityArgs(view);
+  },
+  createCtx() {
+    return createAntigravityCtx();
+  },
+  async handshake({ ctx, view }) {
+    await handshakeAntigravity({ ctx, view });
+  },
+  isReady(ctx) {
+    return isAntigravityReady(ctx);
+  },
+  parseLine(line, ctx) {
+    return parseAntigravityLine(line, ctx);
+  },
+  encodeUserMessage(text, ctx) {
+    return encodeAntigravityUserMessage(text, ctx);
+  },
+  encodeInterruptMessage(text, ctx) {
+    return encodeAntigravityInterruptMessage(text, ctx);
+  },
+};
+
 /**
  * Single source of truth for known providers. Adding a new adapter:
  *   1. write `adapters/<name>.ts`
@@ -182,6 +218,7 @@ const codexAdapter: WorkerAdapter<CodexCtx> = {
 const REGISTRY = {
   claude: claudeAdapter,
   codex: codexAdapter,
+  antigravity: antigravityAdapter,
 } as const;
 
 export type Provider = keyof typeof REGISTRY;

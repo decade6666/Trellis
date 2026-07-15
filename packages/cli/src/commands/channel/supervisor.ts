@@ -91,6 +91,9 @@ export function resolveProviderPath(
   provider: string,
   cwd?: string,
 ): ResolvedProviderPath {
+  if (provider === "antigravity") {
+    return { command: process.execPath, prefixArgs: [] };
+  }
   const fallback = { command: provider, prefixArgs: [] };
   if (process.platform !== "win32") return fallback;
   try {
