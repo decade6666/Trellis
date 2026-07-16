@@ -573,34 +573,18 @@ function resolveCliproxyApiKey(fromYaml = ""): string {
   );
 }
 
-/** Resolve codeagent-wrapper binary path (env > yaml > common install locations). */
+/** Resolve codeagent-wrapper binary path. Fixed single path: explicit override, else bundled. */
 export function resolveWrapperPath(fromYaml = ""): string {
-  // Explicit overrides always win, even if the file is missing (probe fails later).
+  // Single explicit override knob (env or yaml); wins even if the file is
+  // missing (the probe / wrapperExecutable falls through to bundled later).
   const explicit = firstNonEmpty(
     process.env.TRELLIS_CODEAGENT_WRAPPER?.trim(),
-    process.env.CODEAGENT_WRAPPER?.trim(),
     fromYaml.trim(),
   );
   if (explicit) return expandHome(explicit);
 
-  const auto = [
-    path.join(os.homedir(), ".claude", "bin", "codeagent-wrapper"),
-    path.join(os.homedir(), ".local", "bin", "codeagent-wrapper"),
-  ];
-  for (const candidate of auto) {
-    try {
-      if (!fs.existsSync(candidate) || !fs.statSync(candidate).isFile()) {
-        continue;
-      }
-      // Prefer only invokable installs; broken stubs fall through to bundled.
-      if (isNodeScript(candidate)) return candidate;
-      fs.accessSync(candidate, fs.constants.X_OK);
-      return candidate;
-    } catch {
-      // keep scanning
-    }
-  }
-  // Trellis ships its own codeagent-wrapper so collab works without ccg.
+  // Fixed single path: Trellis ships its own codeagent-wrapper, so collab works
+  // without ccg and without scanning ~/.claude/bin, ~/.local/bin, or PATH.
   const bundled = resolveBundledWrapper();
   if (bundled) return bundled;
   return "codeagent-wrapper";
@@ -647,17 +631,15 @@ function isNodeScript(p: string): boolean {
 }
 
 /**
- * First usable wrapper path among: explicit override, PATH, Trellis-bundled.
- * Unusable candidates (missing / non-executable non-scripts) are skipped so a
- * broken CCG install cannot block the bundled fallback.
+ * First usable wrapper path: the explicit override, else the Trellis-bundled
+ * one. Fixed single path — no PATH / home-dir scanning; a broken override just
+ * falls through to the bundled wrapper.
  */
 function wrapperExecutable(wrapperPath: string): string {
   const candidates: string[] = [];
   if (wrapperPath && wrapperPath !== "codeagent-wrapper") {
     candidates.push(wrapperPath);
   }
-  const onPath = findOnPath("codeagent-wrapper");
-  if (onPath) candidates.push(onPath);
   const bundled = resolveBundledWrapper();
   if (bundled) candidates.push(bundled);
 

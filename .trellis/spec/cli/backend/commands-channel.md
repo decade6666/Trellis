@@ -789,6 +789,130 @@ if (meta?.phase) detail.phase = meta.phase;
 return { events: [{ kind: "progress", payload: { detail } }] };
 ```
 
+### Codeagent-wrapper multi-backend dispatch + fixed single path
+
+#### 1. Scope / Trigger
+
+- Trigger: `packages/cli/bin/codeagent-wrapper.mjs` is the Trellis-bundled
+  minimal `codeagent-wrapper`. It backs the antigravity second-model bridge
+  (`adapters/antigravity.ts`) and is also invokable directly from a shell / AI
+  agent. New command surface (`--backend` taxonomy + `--model`) + infra env
+  wiring (per-backend binary overrides) + a cross-tool path-resolution contract.
+- The wrapper's consumer captures the child's **stdout as the reply**
+  (`WRAPPER_RUNNER_SOURCE` does `reply = out.trim()`), so every backend must
+  emit a clean plain-text answer on stdout; progress/diagnostics go to stderr.
+
+#### 2. Signatures
+
+```
+codeagent-wrapper [--progress --lite] --backend <name> [--model <m>] - <cwd>
+  --backend <name>  : agy | codex | claude | grok | kimi (default agy)
+  --model <m>       : optional model, threaded to the backend's model flag
+  -                 : read the prompt from stdin (required for a real call)
+  <cwd> positional  : working directory (last positional)
+  → stdout: backend's plain-text reply
+  → stderr: progress / spawn diagnostics
+  → exit 0 ok; exit 2 unknown backend or empty stdin prompt; exit 127 spawn ENOENT
+```
+
+```js
+// bin/codeagent-wrapper.mjs (pure, exported for tests)
+parseArgs(argv): { backend, stdinPrompt, cwd, model }
+buildBackendCommand(backend, { cwd, prompt, model?, tmpFile? }):
+  { bin, args, spawnCwd, outputMode: "passthrough"|"file", outFile } | null
+
+// adapters/antigravity.ts
+resolveWrapperPath(fromYaml=""): string   // env TRELLIS_CODEAGENT_WRAPPER > yaml > bundled > literal
+```
+
+#### 3. Contracts
+
+Per-backend invocation (binary env-overridable; prompt is the last arg except
+where noted):
+
+| backend | bin override | args | spawnCwd | outputMode | model flag |
+|---------|-------------|------|----------|-----------|-----------|
+| `agy` | `TRELLIS_AGY_BIN`/`AGY_BIN` | `--add-dir <cwd> [--model m] -p <prompt>` | — | passthrough | `--model` |
+| `codex` | `TRELLIS_CODEX_BIN` | `exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox --color never -C <cwd> -o <tmpFile> [-m m] <prompt>` | — | file | `-m` |
+| `claude` | `TRELLIS_CLAUDE_BIN` | `-p <prompt> --add-dir <cwd> [--model m]` | — | passthrough | `--model` |
+| `grok` | `TRELLIS_GROK_BIN` | `--no-auto-update -p <prompt> --cwd <cwd> [-m m]` | — | passthrough | `-m` |
+| `kimi` | `TRELLIS_KIMI_BIN` | `-p <prompt> --add-dir <cwd> [-m m]` | `<cwd>` | passthrough | `-m` |
+
+- **codex output is special**: `exec` default stdout mixes tool/reasoning logs,
+  so the wrapper suppresses child stdout (`stdio: ["ignore","ignore","inherit"]`),
+  passes `-o <tmpFile>` to collect only the final message, then relays that file
+  to stdout and removes the temp dir. All other backends stream child stdout
+  through (`stdio: ["ignore","inherit","inherit"]`).
+- **kimi has no `--cwd`/`-w` flag** (Kimi Code CLI): the working directory is set
+  via the child's `spawnCwd`, not a flag.
+- **Fixed single path** (`resolveWrapperPath`): the wrapper is resolved
+  deterministically — the single explicit override `TRELLIS_CODEAGENT_WRAPPER`
+  (or yaml `collab.second_model.wrapper_path`), else the Trellis-bundled
+  `bin/codeagent-wrapper.mjs`. **No `~/.claude/bin`, `~/.local/bin`, or PATH
+  scanning.** `wrapperExecutable` validates `[override, bundled]` only, so a
+  broken override falls through to bundled. Legacy env `CODEAGENT_WRAPPER` is
+  removed.
+- Antigravity collab default is unchanged: `--backend agy`, and on wrapper
+  failure the runner degrades to a direct `agy --add-dir <cwd> [--model m] -p
+  <prompt>` call.
+
+Env keys:
+
+| Variable | Required? | Default | Used by |
+|----------|-----------|---------|---------|
+| `TRELLIS_CODEAGENT_WRAPPER` | optional | Trellis-bundled wrapper | `resolveWrapperPath()` single override knob |
+| `TRELLIS_{AGY,CODEX,CLAUDE,GROK,KIMI}_BIN` | optional | backend name on PATH | `buildBackendCommand()` per-backend binary |
+| `AGY_BIN` | optional | — | legacy agy binary override (agy only) |
+
+#### 4. Validation & Error Matrix
+
+| Condition | Behavior |
+|-----------|----------|
+| `--backend` not in {agy,codex,claude,grok,kimi} | stderr "unsupported backend '<x>' (supported: …)"; `exit 2` |
+| stdin prompt empty after trim | stderr "empty prompt on stdin"; `exit 2` |
+| backend binary not installed (spawn ENOENT) | stderr "failed to spawn '<bin>': …"; `exit 127` |
+| codex `-o` temp file unreadable at close | stderr diagnostic; still exits with child code; temp dir cleaned in `finally` |
+| `TRELLIS_CODEAGENT_WRAPPER` points at missing/unusable file | falls through to bundled wrapper (never blocks collab) |
+
+#### 5. Good/Base/Bad Cases
+
+- Good: `echo "…" | codeagent-wrapper --backend codex - /repo` → stdout is the
+  codex final message only (logs stayed on stderr), temp dir removed.
+- Base: antigravity collab spawns the bundled wrapper `--backend agy`; agy's
+  plain reply streams straight to stdout.
+- Bad: a backend that dumps tool logs to stdout without `-o` — the consumer
+  captures logs as the "reply". codex MUST use the file output mode.
+
+#### 6. Tests Required
+
+- Unit (`test/commands/codeagent-wrapper-backends.test.ts`): `buildBackendCommand`
+  returns the exact bin/args/spawnCwd/outputMode for all five backends; unknown
+  backend returns `null`; `--model` threads the per-backend flag; codex sets
+  `-o <tmpFile>` + `outputMode:"file"`; `TRELLIS_*_BIN` overrides the bin.
+- Unit (`channel-antigravity-adapter.test.ts`): `resolveWrapperPath()` with no
+  override returns the bundled wrapper and contains no `.claude`/`.local`
+  segment; explicit override wins; broken override degrades to bundled; the
+  wrapper→agy end-to-end and wrapper-fail→direct-agy degrade paths still pass.
+
+#### 7. Wrong vs Correct
+
+**Wrong** (codex logs pollute the captured reply; scans many dirs):
+
+```js
+// stdout inherit for codex → reply = tool logs + answer
+const child = spawn("codex", ["exec", prompt], { stdio: ["ignore","inherit","inherit"] });
+// resolveWrapperPath scans ~/.claude/bin, ~/.local/bin, PATH …
+```
+
+**Correct** (final-message file for codex; deterministic single path):
+
+```js
+const cmd = buildBackendCommand("codex", { cwd, prompt, tmpFile }); // -o tmpFile, outputMode:"file"
+const child = spawn(cmd.bin, cmd.args, { stdio: ["ignore","ignore","inherit"], cwd: cmd.spawnCwd });
+child.on("close", (code) => { process.stdout.write(fs.readFileSync(cmd.outFile,"utf8")); cleanup(); process.exit(code); });
+// resolveWrapperPath: TRELLIS_CODEAGENT_WRAPPER || bundled — no scanning
+```
+
 **Channel type semantics**:
 - `chat` is the default and remains timeline-first.
 - `forum` is thread-list-first (a topic area whose threads are individual topics): `messages <channel>` pretty output starts with a reduced thread list unless event filters are set; `messages --raw` always prints one event per JSONL line.

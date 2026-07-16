@@ -464,6 +464,24 @@ collab:
     }
   });
 
+  it("resolves to the bundled wrapper when no override is set (fixed single path)", () => {
+    const prev = {
+      TRELLIS_CODEAGENT_WRAPPER: process.env.TRELLIS_CODEAGENT_WRAPPER,
+      CODEAGENT_WRAPPER: process.env.CODEAGENT_WRAPPER,
+    };
+    delete process.env.TRELLIS_CODEAGENT_WRAPPER;
+    delete process.env.CODEAGENT_WRAPPER;
+    try {
+      const resolved = resolveWrapperPath();
+      expect(resolved).toBe(BUNDLED_WRAPPER);
+      // No more ~/.claude/bin or ~/.local/bin scanning.
+      expect(resolved).not.toContain(`${path.sep}.claude${path.sep}`);
+      expect(resolved).not.toContain(`${path.sep}.local${path.sep}`);
+    } finally {
+      restoreEnv(prev);
+    }
+  });
+
   it("parses progress lines with detail", () => {
     const result = parseAntigravityLine(
       JSON.stringify({
