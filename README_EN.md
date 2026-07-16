@@ -138,9 +138,8 @@ collab:
   second_model:
     provider: antigravity
     # Default: Trellis-bundled codeagent-wrapper --backend agy
-    # Path is sibling of the trellis binary (bin/codeagent-wrapper.mjs);
-    # never on PATH / ~/.claude/bin. Resolve:
-    #   dirname "$(readlink -f "$(command -v trellis)")"/codeagent-wrapper.mjs
+    # On PATH after `npm install -g @decade666/trellis`; also still at package
+    # bin/codeagent-wrapper.mjs next to the trellis binary.
     driver: codeagent-wrapper
     # wrapper_path: /abs/path/to/codeagent-wrapper.mjs
     # wrapper_backend: agy
@@ -153,8 +152,7 @@ collab:
 Second-model prerequisites:
 
 ```bash
-# driver=codeagent-wrapper (default): bundled wrapper + agy on PATH
-# Resolve: dirname "$(readlink -f "$(command -v trellis)")"/codeagent-wrapper.mjs
+# driver=codeagent-wrapper (default): codeagent-wrapper on PATH after global install + agy on PATH
 # Optional: export TRELLIS_CODEAGENT_WRAPPER=/abs/path/codeagent-wrapper.mjs
 
 # driver=cliproxy: CLIProxyAPI + env key (do not commit secrets)

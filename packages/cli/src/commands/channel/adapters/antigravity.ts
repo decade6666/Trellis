@@ -573,7 +573,7 @@ function resolveCliproxyApiKey(fromYaml = ""): string {
   );
 }
 
-/** Resolve codeagent-wrapper binary path. Fixed single path: explicit override, else bundled. */
+/** Resolve codeagent-wrapper path: env/yaml override → bundled → bare PATH name. */
 export function resolveWrapperPath(fromYaml = ""): string {
   // Single explicit override knob (env or yaml); wins even if the file is
   // missing (the probe / wrapperExecutable falls through to bundled later).
@@ -583,8 +583,9 @@ export function resolveWrapperPath(fromYaml = ""): string {
   );
   if (explicit) return expandHome(explicit);
 
-  // Fixed single path: Trellis ships its own codeagent-wrapper, so collab works
-  // without ccg and without scanning ~/.claude/bin, ~/.local/bin, or PATH.
+  // Prefer the Trellis-bundled wrapper so collab works without CCG and without
+  // scanning ~/.claude/bin or ~/.local/bin. Bare "codeagent-wrapper" is a PATH
+  // fallback after npm global install when package walk-up cannot find bin/.
   const bundled = resolveBundledWrapper();
   if (bundled) return bundled;
   return "codeagent-wrapper";
@@ -632,8 +633,8 @@ function isNodeScript(p: string): boolean {
 
 /**
  * First usable wrapper path: the explicit override, else the Trellis-bundled
- * one. Fixed single path — no PATH / home-dir scanning; a broken override just
- * falls through to the bundled wrapper.
+ * one. No home-dir scanning; bare PATH name is not probed here (bundled wins).
+ * A broken override falls through to the bundled wrapper.
  */
 function wrapperExecutable(wrapperPath: string): string {
   const candidates: string[] = [];

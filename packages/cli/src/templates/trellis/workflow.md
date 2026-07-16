@@ -97,27 +97,22 @@ python3 ./.trellis/scripts/get_context.py --mode phase --step <X.Y>  # detailed 
 ### codeagent-wrapper — direct multi-backend dispatch
 
 When you need to dispatch a one-shot prompt to a second model directly (Codex,
-Antigravity/agy, Claude, Grok, Kimi) instead of a host-native sub-agent, use the
-Trellis-bundled `codeagent-wrapper`. Channel workers use it internally; the notes
-below are for calling it yourself.
+Antigravity/agy, Claude, Grok, Kimi) instead of a host-native sub-agent, use
+`codeagent-wrapper`. Channel workers use it internally; the notes below are for
+calling it yourself.
 
-**Path — resolve it, do not guess.** The wrapper ships inside the Trellis CLI
-package as `bin/codeagent-wrapper.mjs`, next to the `trellis` executable. It is
-**never** on `PATH` and is **never** in `~/.claude/bin`, `~/.local/bin`, or any
-temp dir — do not look there (`/tmp/trellis-wrapper-*` copies are stale stubs).
-Resolve it portably as a sibling of the `trellis` binary:
-
-```bash
-WRAP="$(dirname "$(readlink -f "$(command -v trellis)")")/codeagent-wrapper.mjs"
-```
+**Path.** After `npm install -g @decade666/trellis`, `codeagent-wrapper` is on
+`PATH` (npm `bin` symlink). The script also still lives in the package as
+`bin/codeagent-wrapper.mjs` next to the `trellis` executable. Do not search
+`~/.claude/bin`, `~/.local/bin`, or `/tmp/trellis-wrapper-*` stubs.
 
 Override with `TRELLIS_CODEAGENT_WRAPPER=/abs/path/codeagent-wrapper.mjs` when you
-must point at a different build; nothing else changes the resolved path.
+must point at a different build.
 
 **Invocation** — prompt on stdin, working dir is the last positional:
 
 ```bash
-echo "<prompt>" | node "$WRAP" --backend <agy|codex|claude|grok|kimi> [--model <m>] - "$PWD"
+echo "<prompt>" | codeagent-wrapper --backend <agy|codex|claude|grok|kimi> [--model <m>] - "$PWD"
 ```
 
 - stdout is the backend's plain-text reply; progress/diagnostics go to stderr.

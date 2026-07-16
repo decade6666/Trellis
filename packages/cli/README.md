@@ -174,9 +174,8 @@ collab:
   second_model:
     provider: antigravity
     # 默认：codeagent-wrapper --backend agy → 反重力 CLI
-    # 路径固定为 trellis 二进制同目录 bin/codeagent-wrapper.mjs（无需装 CCG；
-    # 不在 PATH / ~/.claude/bin）。解析：
-    #   dirname "$(readlink -f "$(command -v trellis)")"/codeagent-wrapper.mjs
+    # 全局安装 `npm install -g @decade666/trellis` 后 `codeagent-wrapper` 在 PATH；
+    # 脚本仍位于包内 bin/codeagent-wrapper.mjs（与 trellis 同目录，无需装 CCG）。
     # 如需自定义 wrapper，用 TRELLIS_CODEAGENT_WRAPPER 覆盖绝对路径；
     # wrapper 不可用时自动降级为直连 agy（agy --add-dir <cwd> -p <prompt>）。
     # 内置 wrapper 支持多后端：--backend agy|codex|claude|grok|kimi，
@@ -193,10 +192,8 @@ collab:
 第二模型前置：
 
 ```bash
-# driver=codeagent-wrapper（默认）：只需 agy 在 PATH。
-#   Trellis 自带 codeagent-wrapper，路径固定为 trellis 二进制同目录的
-#   bin/codeagent-wrapper.mjs（无需装 CCG；不在 PATH / ~/.claude/bin）。
-#   解析：dirname "$(readlink -f "$(command -v trellis)")"/codeagent-wrapper.mjs
+# driver=codeagent-wrapper（默认）：全局安装后 codeagent-wrapper 在 PATH；只需 agy 在 PATH。
+#   脚本仍位于包内 bin/codeagent-wrapper.mjs（与 trellis 同目录，无需装 CCG）。
 #   wrapper 缺失或调用失败时自动降级为直连 agy。
 # 可选覆盖：export TRELLIS_CODEAGENT_WRAPPER=/abs/path/codeagent-wrapper.mjs  # 自定义 wrapper
 #           export TRELLIS_AGY_BIN=~/.local/bin/agy

@@ -789,7 +789,7 @@ if (meta?.phase) detail.phase = meta.phase;
 return { events: [{ kind: "progress", payload: { detail } }] };
 ```
 
-### Codeagent-wrapper multi-backend dispatch + fixed single path
+### Codeagent-wrapper multi-backend dispatch + npm bin PATH
 
 #### 1. Scope / Trigger
 
@@ -845,13 +845,15 @@ where noted):
   through (`stdio: ["ignore","inherit","inherit"]`).
 - **kimi has no `--cwd`/`-w` flag** (Kimi Code CLI): the working directory is set
   via the child's `spawnCwd`, not a flag.
-- **Fixed single path** (`resolveWrapperPath`): the wrapper is resolved
-  deterministically — the single explicit override `TRELLIS_CODEAGENT_WRAPPER`
-  (or yaml `collab.second_model.wrapper_path`), else the Trellis-bundled
-  `bin/codeagent-wrapper.mjs`. **No `~/.claude/bin`, `~/.local/bin`, or PATH
-  scanning.** `wrapperExecutable` validates `[override, bundled]` only, so a
-  broken override falls through to bundled. Legacy env `CODEAGENT_WRAPPER` is
-  removed.
+- **Wrapper resolution** (`resolveWrapperPath`): env `TRELLIS_CODEAGENT_WRAPPER`
+  (or yaml `collab.second_model.wrapper_path`) first, else the Trellis-bundled
+  `bin/codeagent-wrapper.mjs` (walk-up from the package), else the bare name
+  `"codeagent-wrapper"` which hits PATH after `npm install -g` exposes the npm
+  `bin` symlink. **No `~/.claude/bin` / `~/.local/bin` home-dir scanning.**
+  `wrapperExecutable` validates `[override, bundled]` only, so a broken override
+  falls through to bundled. Legacy env `CODEAGENT_WRAPPER` is removed. Shell /
+  agent callers should invoke the bare `codeagent-wrapper` on PATH after global
+  install (script still lives as package `bin/codeagent-wrapper.mjs`).
 - Antigravity collab default is unchanged: `--backend agy`, and on wrapper
   failure the runner degrades to a direct `agy --add-dir <cwd> [--model m] -p
   <prompt>` call.

@@ -464,7 +464,7 @@ collab:
     }
   });
 
-  it("resolves to the bundled wrapper when no override is set (fixed single path)", () => {
+  it("resolves to the bundled wrapper when no override is set", () => {
     const prev = {
       TRELLIS_CODEAGENT_WRAPPER: process.env.TRELLIS_CODEAGENT_WRAPPER,
       CODEAGENT_WRAPPER: process.env.CODEAGENT_WRAPPER,

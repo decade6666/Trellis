@@ -222,6 +222,15 @@ async function main() {
 
 // Only run when invoked directly, so buildBackendCommand / parseArgs stay
 // importable from tests without side effects.
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main();
+// realpath argv[1] so npm global bin symlinks still match import.meta.url.
+if (process.argv[1]) {
+  let invoked = process.argv[1];
+  try {
+    invoked = fs.realpathSync(invoked);
+  } catch {
+    // keep raw path when realpath fails (missing intermediate link, etc.)
+  }
+  if (import.meta.url === pathToFileURL(invoked).href) {
+    main();
+  }
 }

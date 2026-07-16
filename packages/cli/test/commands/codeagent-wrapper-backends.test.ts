@@ -1,3 +1,8 @@
+import { spawn } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 // The bundled wrapper is plain ESM shipped in `bin/`; import its pure helpers.
@@ -5,6 +10,10 @@ import {
   buildBackendCommand,
   parseArgs,
 } from "../../bin/codeagent-wrapper.mjs";
+
+const WRAPPER_REAL = fileURLToPath(
+  new URL("../../bin/codeagent-wrapper.mjs", import.meta.url),
+);
 
 const BIN_ENV_KEYS = [
   "TRELLIS_AGY_BIN",
@@ -145,5 +154,36 @@ describe("codeagent-wrapper buildBackendCommand", () => {
     );
     expect(buildBackendCommand("kimi", base)?.bin).toBe("/opt/kimi");
     expect(buildBackendCommand("agy", base)?.bin).toBe("/opt/agy");
+  });
+});
+
+describe("codeagent-wrapper symlink invocation (main guard)", () => {
+  it("runs main() when argv[1] is an npm-style symlink (exit 2 on bogus backend)", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "trellis-wrapper-"));
+    const linkPath = path.join(tmpDir, "codeagent-wrapper");
+    try {
+      fs.symlinkSync(WRAPPER_REAL, linkPath);
+      const result = await new Promise<{
+        code: number | null;
+        stderr: string;
+      }>((resolve, reject) => {
+        const child = spawn(process.execPath, [linkPath, "--backend", "bogus", "-", tmpDir], {
+          stdio: ["pipe", "pipe", "pipe"],
+          env: process.env,
+        });
+        let stderr = "";
+        child.stderr.on("data", (chunk: Buffer | string) => {
+          stderr += String(chunk);
+        });
+        // bogus backend exits 2 before stdin is read; still close stdin for cleanliness
+        child.stdin.end("ping");
+        child.on("error", reject);
+        child.on("close", (code) => resolve({ code, stderr }));
+      });
+      expect(result.code).toBe(2);
+      expect(result.stderr).toMatch(/unsupported backend/i);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });

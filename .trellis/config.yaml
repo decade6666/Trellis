@@ -126,12 +126,11 @@ channel:
 #   second_model:
 #     provider: antigravity
 #     # Default driver: codeagent-wrapper --backend agy (Trellis-bundled wrapper).
-#     # Fixed single path: sibling of the trellis binary (bin/codeagent-wrapper.mjs).
-#     # Never on PATH / ~/.claude/bin / ~/.local/bin — resolve with:
-#     #   dirname "$(readlink -f "$(command -v trellis)")"/codeagent-wrapper.mjs
+#     # On PATH after `npm install -g @decade666/trellis`; also still bundled as
+#     # package bin/codeagent-wrapper.mjs (sibling of the trellis binary).
 #     # Bundled wrapper supports --backend agy|codex|claude|grok|kimi.
 #     driver: codeagent-wrapper
-#     # Override via env TRELLIS_CODEAGENT_WRAPPER or yaml wrapper_path (absolute):
+#     # Optional override via env TRELLIS_CODEAGENT_WRAPPER or yaml wrapper_path:
 #     # wrapper_path: /abs/path/to/codeagent-wrapper.mjs
 #     # wrapper_backend: agy
 #     # Alt: OpenAI-compatible CLIProxyAPI (no agy CLI needed)
