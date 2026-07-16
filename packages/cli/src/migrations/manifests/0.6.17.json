@@ -1,0 +1,9 @@
+{
+  "version": "0.6.17",
+  "description": "Expose codeagent-wrapper on PATH via npm bin field.",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Enhancements:**\n- feat(cli): add `codeagent-wrapper` to package `bin` so `npm install -g` puts it on PATH.\n- fix(cli): realpath-aware main-guard so npm global symlinks still invoke `main()`.\n- docs: workflow/templates/READMEs teach bare `codeagent-wrapper` invocation instead of the sibling `readlink` formula.",
+  "migrations": [],
+  "notes": "No `--migrate` required.\n\nAfter upgrade, `command -v codeagent-wrapper` should resolve. Agents can call:\n\n```bash\necho \"<prompt>\" | codeagent-wrapper --backend <agy|codex|claude|grok|kimi> [--model <m>] - \"$PWD\"\n```\n\nOverride remains: `TRELLIS_CODEAGENT_WRAPPER`.\n\nInstall: `npm install -g @decade666/trellis@latest`"
+}
