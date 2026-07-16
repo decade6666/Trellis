@@ -183,7 +183,7 @@ Complex task: ask the user if you can create a Trellis task and enter the planni
 - 1.0 Create task `[required · once]` (only after task-creation consent)
 - 1.1 Requirement exploration `[required · repeatable]` (`prd.md`; complex tasks also need `design.md` + `implement.md`)
 - 1.2 Research `[optional · repeatable]`
-- 1.3 Configure context `[required · once]` — Claude Code, Cursor, OpenCode, Codex, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi (sub-agent-dispatch platforms only; inline platforms skip)
+- 1.3 Configure context `[required · once]` — Claude Code, Cursor, OpenCode, Codex, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix (sub-agent-dispatch platforms only; inline platforms skip)
 - 1.4 Activate task `[required · once]` (review gate, then `task.py start`; status → in_progress)
 - 1.5 Completion criteria
 
@@ -220,7 +220,7 @@ Inline mode: skip jsonl curation; Phase 2 reads artifacts/specs via `trellis-bef
      therefore must cover every required step from implementation through
      commit, including Phase 3.3 spec update and Phase 3.4 commit. -->
 
-Sub-agent dispatch protocol applies to all platforms and all sub-agents, including class-2 Codex/Copilot/Gemini/Qoder and `trellis-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions.
+Sub-agent dispatch protocol applies to all platforms and all sub-agents, including class-2 Codex/Gemini/Qoder/Copilot/ZCode/Reasonix/Trae and `trellis-research`: every dispatch prompt starts with `Active task: <task path from task.py current>` before role-specific instructions.
 
 [workflow-state:in_progress]
 Tools: `trellis-implement` / `trellis-research` are sub-agent types only (Task/Agent tool, NOT Skill; there is no skill by these names). `trellis-update-spec` is a skill. `trellis-check` exists as both; prefer the Agent form when verifying after code changes.
@@ -272,13 +272,13 @@ Code committed. Run `/trellis:finish-work`; if dirty, return to Phase 3.4 first.
 
 When a user request matches one of these intents inside an active task, route first, then load the detailed phase step if needed.
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 - Planning or unclear requirements -> `trellis-brainstorm`.
 - `in_progress` implementation/check -> dispatch `trellis-implement` / `trellis-check`.
 - Repeated debugging -> `trellis-break-loop`; spec updates -> `trellis-update-spec`.
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 [codex-inline, Kilo, Antigravity, Devin]
 
@@ -349,7 +349,7 @@ When considering a parent/child split:
 
 Return to this step whenever requirements change and revise the relevant artifact.
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
 
 Optional collab gate: when `.trellis/config.yaml` has `collab.enabled: true`
 and `collab.dual_model_analysis: true`, and this task is complex, ask the
@@ -358,7 +358,7 @@ user to confirm dual-model analysis, run Pattern G from
 synthesize both outputs into `prd.md` / `design.md` yourself, and mark task
 metadata `meta.collab.dual_analysis_used = true`.
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
 
 Optional dual-model planning: when `.trellis/config.yaml` has both
 `collab.enabled` and `collab.dual_model_analysis` set to true and this task is
@@ -371,7 +371,7 @@ their findings into the planning artifacts yourself. After synthesis, set
 
 Research can happen at any time during requirement exploration. It isn't limited to local code — you can use any available tool (MCP servers, skills, web search, etc.) to look up external information, including third-party library docs, industry practices, API references, etc.
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 Spawn the research sub-agent:
 
@@ -379,7 +379,7 @@ Spawn the research sub-agent:
 - **Task description**: Research <specific question>
 - **Key requirement**: Research output MUST be persisted to `{TASK_DIR}/research/`
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 [codex-inline, Kilo, Antigravity, Devin]
 
@@ -398,7 +398,7 @@ Brainstorm and research can interleave freely — pause to research a technical 
 
 #### 1.3 Configure context `[required · once]`
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 Curate `implement.jsonl` and `check.jsonl` so the Phase 2 sub-agents get the right spec/research context. These files were seeded on `task create` with a single self-describing `_example` line; your job here is to fill in real entries.
 
@@ -443,7 +443,7 @@ Ready gate: both `implement.jsonl` and `check.jsonl` must contain at least one r
 
 Skip this step only when both files already have real curated entries.
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 [codex-inline, Kilo, Antigravity, Devin]
 
@@ -476,11 +476,11 @@ If `task.py start` errors with a session-identity message (no context key from h
 | `design.md` exists (complex tasks) | ✅ |
 | `implement.md` exists (complex tasks) | ✅ |
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 | `implement.jsonl` and `check.jsonl` each contain at least one real curated entry (seed row does not count) | ✅ |
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 ---
 
@@ -490,7 +490,7 @@ Goal: turn reviewed planning artifacts into code that passes quality checks.
 
 #### 2.1 Implement `[required · repeatable]`
 
-[Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
+[Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi, Oh My Pi]
 
 Spawn the implement sub-agent:
 
@@ -510,9 +510,9 @@ with `Active task: <task path from task.py current>`, then provide the task
 artifacts and implementation brief. Wait for the worker, review its diff in the
 main session, and continue to 2.2 only after that review.
 
-[/Claude Code, Cursor, OpenCode, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi, Oh My Pi]
 
-[codex-sub-agent]
+[codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]
 
 Spawn the implement sub-agent:
 
@@ -520,11 +520,11 @@ Spawn the implement sub-agent:
 - **Task description**: Implement the reviewed task artifacts, consulting materials under `{TASK_DIR}/research/`; finish by running project lint and type-check
 - **Dispatch prompt guard**: The prompt MUST start with `Active task: <task path>`, then explicitly say the spawned agent is already `trellis-implement` and must implement directly without spawning another `trellis-implement` / `trellis-check`.
 
-The Codex sub-agent definition auto-handles the context load requirement:
+The pull-based sub-agent definition auto-handles the context load requirement:
 - Resolves the active task with `task.py current --source`, then reads `prd.md`, `design.md` if present, and `implement.md` if present
 - Reads `implement.jsonl` and requires the agent to load each referenced spec/research file before coding
 
-[/codex-sub-agent]
+[/codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]
 
 [Kiro]
 
@@ -552,7 +552,7 @@ The platform prelude auto-handles the context load requirement:
 
 #### 2.2 Quality check `[required · repeatable]`
 
-[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi]
+[Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 Optional cross-review: when `.trellis/config.yaml` has `collab.enabled` and
 `collab.cross_review` set to true, `task.json` has
@@ -573,7 +573,7 @@ The check agent's job:
 - Auto-fix issues it finds
 - Run lint and typecheck to verify
 
-[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi]
+[/Claude Code, Cursor, OpenCode, codex-sub-agent, Kiro, Gemini, Qoder, CodeBuddy, Copilot, Droid, Pi, Oh My Pi, ZCode, Reasonix, Trae]
 
 [codex-inline, Kilo, Antigravity, Devin]
 
