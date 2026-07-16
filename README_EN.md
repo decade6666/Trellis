@@ -137,9 +137,12 @@ collab:
   codex_led_spec_update: true
   second_model:
     provider: antigravity
-    # Default: same path as CCG — codeagent-wrapper --backend agy
+    # Default: Trellis-bundled codeagent-wrapper --backend agy
+    # Path is sibling of the trellis binary (bin/codeagent-wrapper.mjs);
+    # never on PATH / ~/.claude/bin. Resolve:
+    #   dirname "$(readlink -f "$(command -v trellis)")"/codeagent-wrapper.mjs
     driver: codeagent-wrapper
-    # wrapper_path: ~/.claude/bin/codeagent-wrapper
+    # wrapper_path: /abs/path/to/codeagent-wrapper.mjs
     # wrapper_backend: agy
     # Alt: CLIProxy OpenAI-compatible HTTP (no agy CLI)
     # driver: cliproxy
@@ -150,8 +153,9 @@ collab:
 Second-model prerequisites:
 
 ```bash
-# driver=codeagent-wrapper (default): codeagent-wrapper + agy on PATH
-# Optional: export TRELLIS_CODEAGENT_WRAPPER=~/.claude/bin/codeagent-wrapper
+# driver=codeagent-wrapper (default): bundled wrapper + agy on PATH
+# Resolve: dirname "$(readlink -f "$(command -v trellis)")"/codeagent-wrapper.mjs
+# Optional: export TRELLIS_CODEAGENT_WRAPPER=/abs/path/codeagent-wrapper.mjs
 
 # driver=cliproxy: CLIProxyAPI + env key (do not commit secrets)
 export CLIPROXY_API_KEY="<value from CLIProxyAPI config api-keys>"
