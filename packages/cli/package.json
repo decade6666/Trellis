@@ -1,6 +1,6 @@
 {
   "name": "@decade666/trellis",
-  "version": "0.6.12",
+  "version": "0.6.13",
   "description": "AI capabilities grow like ivy \u2014 Trellis provides the structure to guide them along a disciplined path",
   "type": "module",
   "main": "./dist/index.js",
