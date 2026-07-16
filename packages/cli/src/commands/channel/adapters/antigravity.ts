@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { DIR_NAMES } from "../../../constants/paths.js";
 
@@ -128,9 +129,14 @@ rl.on("line", (line) => {
 `;
 
 /**
- * Long-lived shim: each user turn spawns
- *   codeagent-wrapper --progress --lite --backend agy - <cwd>
- * with the prompt on stdin (CCG multi-cli path).
+ * Long-lived shim. Each user turn PREFERS codeagent-wrapper and degrades to a
+ * direct `agy` call only when the wrapper is absent or its invocation fails.
+ *   wrapper: [node] codeagent-wrapper --progress --lite --backend agy - <cwd>
+ *            (prompt on stdin — CCG's wrapper if installed, else Trellis's bundled one)
+ *   agy:     agy --add-dir <cwd> [--model <m>] -p <prompt>
+ *            (direct Antigravity CLI — the degrade path, zero ccg dependency)
+ * The wrapper is only a thin dispatcher over `agy`, so the degrade keeps collab
+ * working even when no wrapper is usable.
  */
 const WRAPPER_RUNNER_SOURCE = String.raw`
 const encoded = process.argv[1] ?? "";
@@ -146,31 +152,43 @@ function emit(event) {
   stdout.write(JSON.stringify(event) + "\n");
 }
 
-function runTurn(text) {
-  return new Promise((resolve, reject) => {
-    const startedAt = Date.now();
-    emit({
-      type: "progress",
-      detail: {
-        kind: "driver_status",
-        driver: "codeagent-wrapper",
-        status: "request_started",
-        backend: config.backend,
-        wrapper: config.wrapperPath,
-      },
-    });
-    const prompt = config.systemPrompt
-      ? String(config.systemPrompt) + "\n\n" + text
-      : text;
-    const args = [
-      "--progress",
-      "--lite",
-      "--backend",
-      config.backend || "agy",
-      "-",
-      config.cwd || process.cwd(),
-    ];
-    const child = spawn(config.wrapperPath, args, {
+function spawnBackend(kind, prompt) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      resolve(result);
+    };
+    const isAgy = kind === "agy";
+    let bin;
+    let args;
+    let useStdin;
+    if (isAgy) {
+      bin = config.agyBin;
+      args = ["--add-dir", config.cwd || process.cwd()]
+        .concat(config.model ? ["--model", config.model] : [])
+        .concat(["-p", prompt]);
+      useStdin = false;
+    } else {
+      const wrapperArgs = [
+        "--progress",
+        "--lite",
+        "--backend",
+        config.backend || "agy",
+        "-",
+        config.cwd || process.cwd(),
+      ];
+      if (config.wrapperViaNode) {
+        bin = process.execPath;
+        args = [config.wrapperPath].concat(wrapperArgs);
+      } else {
+        bin = config.wrapperPath;
+        args = wrapperArgs;
+      }
+      useStdin = true;
+    }
+    const child = spawn(bin, args, {
       stdio: ["pipe", "pipe", "pipe"],
       env: process.env,
     });
@@ -189,49 +207,120 @@ function runTurn(text) {
         if (!t) continue;
         emit({
           type: "progress",
-          detail: {
-            kind: "wrapper_stderr",
-            message: t.slice(0, 240),
-          },
+          detail: { kind: "wrapper_stderr", message: t.slice(0, 240) },
         });
       }
     });
     child.on("error", (e) => {
-      reject(
-        new Error(
-          "failed to spawn codeagent-wrapper: " +
-            (e && e.message ? e.message : String(e)),
-        ),
-      );
+      finish({
+        ok: false,
+        spawnError: true,
+        message: e && e.message ? e.message : String(e),
+        out: "",
+        err,
+        code: null,
+        kind,
+      });
     });
     child.on("close", (code) => {
       const reply = out.trim();
-      if (!reply && code !== 0) {
-        reject(
-          new Error(
-            "codeagent-wrapper exit " +
-              code +
-              ": " +
-              err.slice(0, 400).replace(/\s+/g, " "),
-          ),
-        );
-        return;
-      }
-      if (reply) {
-        emit({ type: "message", text: reply });
-      } else {
-        emit({
-          type: "error",
-          message: "codeagent-wrapper produced empty stdout",
-          detail: { exit_code: code, stderr_excerpt: err.slice(0, 200) },
-        });
-      }
-      emit({ type: "done", duration_ms: Date.now() - startedAt });
-      resolve();
+      finish({
+        ok: reply.length > 0,
+        spawnError: false,
+        message: "",
+        out: reply,
+        err,
+        code,
+        kind,
+      });
     });
-    child.stdin.write(prompt);
-    child.stdin.end();
+    // Guard write: spawn ENOENT still exposes a stdin stream, but other
+    // failures can leave it null / already destroyed.
+    try {
+      if (useStdin && child.stdin) child.stdin.write(prompt);
+      if (child.stdin) child.stdin.end();
+    } catch (e) {
+      finish({
+        ok: false,
+        spawnError: true,
+        message: e && e.message ? e.message : String(e),
+        out: "",
+        err,
+        code: null,
+        kind,
+      });
+    }
   });
+}
+
+async function runTurn(text) {
+  const startedAt = Date.now();
+  const prompt = config.systemPrompt
+    ? String(config.systemPrompt) + "\n\n" + text
+    : text;
+  const preferWrapper = config.mode === "wrapper" && Boolean(config.wrapperPath);
+  emit({
+    type: "progress",
+    detail: {
+      kind: "driver_status",
+      driver: preferWrapper ? "codeagent-wrapper" : "agy",
+      status: "request_started",
+      backend: config.backend,
+      model: config.model || undefined,
+    },
+  });
+
+  let result;
+  if (preferWrapper) {
+    result = await spawnBackend("wrapper", prompt);
+    if (!result.ok && config.agyBin) {
+      emit({
+        type: "progress",
+        detail: {
+          kind: "driver_status",
+          driver: "agy",
+          status: "wrapper_degraded",
+          message: result.spawnError
+            ? "spawn failed: " + result.message
+            : "exit " + result.code,
+        },
+      });
+      result = await spawnBackend("agy", prompt);
+    }
+  } else if (config.agyBin) {
+    result = await spawnBackend("agy", prompt);
+  } else {
+    result = {
+      ok: false,
+      spawnError: true,
+      message: "no codeagent-wrapper and no agy CLI available",
+      out: "",
+      err: "",
+      code: null,
+      kind: "none",
+    };
+  }
+
+  if (result.ok) {
+    emit({ type: "message", text: result.out });
+  } else {
+    const detail =
+      result.kind === "none"
+        ? result.message
+        : result.kind +
+          (result.spawnError
+            ? " spawn failed: " + result.message
+            : " produced no output (exit " + result.code + ")");
+    emit({
+      type: "error",
+      message: detail,
+      detail: {
+        exit_code: result.code,
+        stderr_excerpt: (result.err || "").slice(0, 200),
+      },
+    });
+  }
+  emit({ type: "done", duration_ms: Date.now() - startedAt });
 }
 
 rl.on("line", (line) => {
@@ -277,10 +366,12 @@ export interface AntigravityConfig {
   cliproxyModel: string;
   /** OpenAI-compatible Bearer token for cliproxy/CLIProxyAPI. Prefer env over yaml. */
   cliproxyApiKey: string;
-  /** Absolute path to codeagent-wrapper binary. */
+  /** Absolute path to codeagent-wrapper binary (ccg's, PATH, or Trellis-bundled). */
   wrapperPath: string;
   /** Wrapper --backend value (agy | antigravity). */
   wrapperBackend: string;
+  /** Absolute path / command for the `agy` CLI used by the direct degrade path. */
+  agyBin: string;
   secondModelProvider: string;
 }
 
@@ -297,6 +388,7 @@ function defaultConfig(): AntigravityConfig {
     cliproxyApiKey: resolveCliproxyApiKey(),
     wrapperPath: resolveWrapperPath(),
     wrapperBackend: DEFAULT_WRAPPER_BACKEND,
+    agyBin: resolveAgyBin(),
     secondModelProvider: "antigravity",
   };
 }
@@ -334,9 +426,14 @@ export function buildAntigravityArgs(view: {
   assertSupportedDriver(config.driver);
 
   if (config.driver === "codeagent-wrapper") {
+    const invocation = resolveWrapperInvocation(config);
     const runnerConfig = {
-      wrapperPath: config.wrapperPath,
+      mode: invocation.mode,
+      wrapperPath: invocation.wrapperPath,
+      wrapperViaNode: invocation.viaNode,
       backend: config.wrapperBackend,
+      agyBin: invocation.agyBin,
+      model: view.model ?? "",
       cwd: view.cwd,
       systemPrompt: view.systemPrompt,
     };
@@ -368,7 +465,11 @@ export async function handshakeAntigravity(args: {
   assertSupportedDriver(config.driver);
 
   if (config.driver === "codeagent-wrapper") {
-    await probeCodeagentWrapper(config.wrapperPath, config.wrapperBackend);
+    await probeCodeagentWrapper(
+      config.wrapperPath,
+      config.wrapperBackend,
+      config.agyBin,
+    );
   } else {
     await probeCliproxy(config.cliproxyBaseUrl, config.cliproxyApiKey);
   }
@@ -488,14 +589,131 @@ export function resolveWrapperPath(fromYaml = ""): string {
   ];
   for (const candidate of auto) {
     try {
-      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
-        return candidate;
+      if (!fs.existsSync(candidate) || !fs.statSync(candidate).isFile()) {
+        continue;
       }
+      // Prefer only invokable installs; broken stubs fall through to bundled.
+      if (isNodeScript(candidate)) return candidate;
+      fs.accessSync(candidate, fs.constants.X_OK);
+      return candidate;
     } catch {
       // keep scanning
     }
   }
+  // Trellis ships its own codeagent-wrapper so collab works without ccg.
+  const bundled = resolveBundledWrapper();
+  if (bundled) return bundled;
   return "codeagent-wrapper";
+}
+
+/** Resolve the `agy` CLI used for the direct degrade path (env > yaml > PATH). */
+export function resolveAgyBin(fromYaml = ""): string {
+  const explicit = firstNonEmpty(
+    process.env.TRELLIS_AGY_BIN?.trim(),
+    process.env.AGY_BIN?.trim(),
+    fromYaml.trim(),
+  );
+  if (explicit) return expandHome(explicit);
+  const found = findOnPath("agy");
+  if (found) return found;
+  return "agy";
+}
+
+/** Locate the Trellis-bundled codeagent-wrapper script shipped in the package `bin/`. */
+function resolveBundledWrapper(): string {
+  try {
+    let dir = path.dirname(fileURLToPath(import.meta.url));
+    for (let i = 0; i < 8; i++) {
+      const candidate = path.join(dir, "bin", "codeagent-wrapper.mjs");
+      try {
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+          return candidate;
+        }
+      } catch {
+        // keep walking up
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  } catch {
+    // import.meta unavailable — no bundled wrapper
+  }
+  return "";
+}
+
+function isNodeScript(p: string): boolean {
+  return /\.(mjs|cjs|js)$/.test(p);
+}
+
+/**
+ * First usable wrapper path among: explicit override, PATH, Trellis-bundled.
+ * Unusable candidates (missing / non-executable non-scripts) are skipped so a
+ * broken CCG install cannot block the bundled fallback.
+ */
+function wrapperExecutable(wrapperPath: string): string {
+  const candidates: string[] = [];
+  if (wrapperPath && wrapperPath !== "codeagent-wrapper") {
+    candidates.push(wrapperPath);
+  }
+  const onPath = findOnPath("codeagent-wrapper");
+  if (onPath) candidates.push(onPath);
+  const bundled = resolveBundledWrapper();
+  if (bundled) candidates.push(bundled);
+
+  const seen = new Set<string>();
+  for (const resolved of candidates) {
+    if (!resolved || seen.has(resolved)) continue;
+    seen.add(resolved);
+    try {
+      if (!fs.existsSync(resolved) || !fs.statSync(resolved).isFile()) {
+        continue;
+      }
+      // Node scripts are launched via `node <script>`, so the exec bit is irrelevant.
+      if (isNodeScript(resolved)) return resolved;
+      fs.accessSync(resolved, fs.constants.X_OK);
+      return resolved;
+    } catch {
+      // try next candidate
+    }
+  }
+  return "";
+}
+
+/** A usable `agy` binary path or "" when it is not installed. */
+function agyExecutable(agyBin: string): string {
+  const resolved =
+    agyBin && agyBin !== "agy" ? agyBin : (findOnPath("agy") ?? "");
+  if (!resolved) return "";
+  try {
+    fs.accessSync(resolved, fs.constants.X_OK);
+    return resolved;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Decide the per-turn backend. Prefer codeagent-wrapper (ccg / bundled); carry
+ * the resolved `agy` bin so the runner can degrade at call time on failure.
+ */
+function resolveWrapperInvocation(config: AntigravityConfig): {
+  mode: "wrapper" | "agy";
+  wrapperPath: string;
+  viaNode: boolean;
+  agyBin: string;
+} {
+  const agyBin = agyExecutable(config.agyBin);
+  const wrapper = wrapperExecutable(config.wrapperPath);
+  if (wrapper) {
+    return {
+      mode: "wrapper",
+      wrapperPath: wrapper,
+      viaNode: isNodeScript(wrapper),
+      agyBin,
+    };
+  }
+  return { mode: "agy", wrapperPath: "", viaNode: false, agyBin };
 }
 
 function expandHome(p: string): string {
@@ -528,6 +746,7 @@ export function parseAntigravityConfig(
   const resolved: AntigravityConfig = { ...defaults };
   let yamlApiKey = "";
   let yamlWrapperPath = "";
+  let yamlAgyBin = "";
   const lines = content.split("\n");
   let inCollab = false;
   let inSecondModel = false;
@@ -587,6 +806,11 @@ export function parseAntigravityConfig(
         resolved.wrapperBackend = stripYamlScalar(wrapperBackend[1]);
         continue;
       }
+      const agyBin = line.match(/^ {4}agy_bin:\s+(.+)$/);
+      if (agyBin) {
+        yamlAgyBin = stripYamlScalar(agyBin[1]);
+        continue;
+      }
       if (!/^ {4}\S/.test(line)) {
         inSecondModel = false;
       }
@@ -601,6 +825,7 @@ export function parseAntigravityConfig(
   // Env always wins over yaml when both are set.
   resolved.cliproxyApiKey = resolveCliproxyApiKey(yamlApiKey);
   resolved.wrapperPath = resolveWrapperPath(yamlWrapperPath);
+  resolved.agyBin = resolveAgyBin(yamlAgyBin);
   return resolved;
 }
 
@@ -638,38 +863,18 @@ export async function probeCliproxy(
 export async function probeCodeagentWrapper(
   wrapperPath: string,
   backend = DEFAULT_WRAPPER_BACKEND,
+  agyBin = "",
 ): Promise<void> {
-  const resolved =
-    wrapperPath && wrapperPath !== "codeagent-wrapper"
-      ? wrapperPath
-      : resolveWrapperPath();
-
-  if (resolved === "codeagent-wrapper") {
-    const found = findOnPath("codeagent-wrapper");
-    if (!found) {
-      throw new Error(
-        "Antigravity codeagent-wrapper probe failed: codeagent-wrapper not on PATH. " +
-          "Install under ~/.claude/bin/codeagent-wrapper or set TRELLIS_CODEAGENT_WRAPPER. " +
-          `Backend will be '${backend}' (expects agy CLI).`,
-      );
-    }
-    return;
-  }
-
-  if (!fs.existsSync(resolved)) {
-    throw new Error(
-      `Antigravity codeagent-wrapper probe failed: binary not found at ${resolved}. ` +
-        "Install codeagent-wrapper (CCG) or set TRELLIS_CODEAGENT_WRAPPER / collab.second_model.wrapper_path. " +
-        "Ensure `agy` is on PATH for backend=agy.",
-    );
-  }
-  try {
-    fs.accessSync(resolved, fs.constants.X_OK);
-  } catch {
-    throw new Error(
-      `Antigravity codeagent-wrapper probe failed: ${resolved} is not executable.`,
-    );
-  }
+  // Preferred path: any usable codeagent-wrapper (ccg's, PATH, or bundled).
+  if (wrapperExecutable(wrapperPath)) return;
+  // Degrade path: the `agy` CLI invoked directly.
+  if (agyExecutable(agyBin)) return;
+  throw new Error(
+    "Antigravity codeagent-wrapper probe failed: neither codeagent-wrapper nor the `agy` CLI is usable. " +
+      "Trellis bundles a codeagent-wrapper, so this usually means the package is incomplete; " +
+      "install `agy` (Antigravity CLI) or set TRELLIS_AGY_BIN / TRELLIS_CODEAGENT_WRAPPER, " +
+      `or switch collab.second_model.driver to cliproxy. Backend='${backend}' (expects agy CLI).`,
+  );
 }
 
 function findOnPath(bin: string): string | undefined {
@@ -689,7 +894,7 @@ function assertSupportedDriver(driver: AntigravityDriver): void {
   if (driver === "cliproxy" || driver === "codeagent-wrapper") return;
   throw new Error(
     `Antigravity driver '${driver}' is not implemented yet. ` +
-      "Use collab.second_model.driver: codeagent-wrapper (CCG / agy) or cliproxy.",
+      "Use collab.second_model.driver: codeagent-wrapper (agy) or cliproxy.",
   );
 }
 
