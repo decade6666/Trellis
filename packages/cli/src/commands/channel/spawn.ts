@@ -7,6 +7,7 @@ import type { InboxPolicy } from "@decade666/trellis-core/channel";
 
 import { loadAgent } from "./agent-loader.js";
 import type { Provider } from "./adapters/index.js";
+import type { CodexSandboxMode } from "./adapters/codex.js";
 import { assembleContext } from "./context-loader.js";
 import {
   enforceSpawnBudget,
@@ -55,6 +56,8 @@ export interface SpawnOptions {
    * spawn-time budget check. Overrides env / config / built-in default.
    */
   maxLiveWorkers?: number;
+  /** Codex-only: override thread/start sandbox mode. */
+  sandbox?: CodexSandboxMode;
 }
 
 interface ResolvedSpawn {
@@ -266,6 +269,7 @@ async function spawnLocked(
       spawnedBy,
       ...(opts.inboxPolicy ? { inboxPolicy: opts.inboxPolicy } : {}),
       ...(opts.agent ? { agent: opts.agent } : {}),
+      ...(opts.sandbox ? { sandbox: opts.sandbox } : {}),
       ...(resolved.contextFiles.length > 0
         ? { contextFiles: resolved.contextFiles }
         : {}),

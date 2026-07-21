@@ -1,0 +1,17 @@
+{
+  "version": "0.6.18",
+  "description": "Pi Agent now shares the `.agents/skills/` skill root with Codex/Gemini CLI instead of keeping a private `.pi/skills/` copy, fixing duplicate/conflicting skill installs when a project has both platforms enabled. Also includes update safety ports from upstream (#425 reintroduced-template preserve, #447 rename-dir no-clobber).",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Fixes (ported from upstream mindfold-ai/Trellis):**\n- fix(update): preserve reintroduced templates in safe-file-delete (#425)\n- fix(update): rename-dir merge must not clobber canonical target with stale source bytes (#447)\n- fix(pi): write shared skills to `.agents/skills/` instead of private `.pi/skills/` (#447)\n\n**Migrations:**\n- rename-dir `.pi/skills` → `.agents/skills` for existing Pi installs",
+  "migrations": [
+    {
+      "type": "rename-dir",
+      "from": ".pi/skills",
+      "to": ".agents/skills",
+      "description": "Pi Agent: move installed skills from the private `.pi/skills/` root to the shared `.agents/skills/` root also used by Codex and Gemini CLI.",
+      "reason": "Pi already discovers `.agents/skills/` natively, so keeping a separate `.pi/skills/` copy of the same Trellis skills caused Pi to see the same skill twice (once from each root) when Codex or Gemini was also installed (#447)."
+    }
+  ],
+  "notes": "No forced --migrate for breaking changes. On `trellis update --migrate`, legacy `.pi/skills/` is relocated into `.agents/skills/` when safe. Fork version line remains 0.6.17+; this manifest id is 0.6.18 (not upstream 0.6.8) to avoid clashing with the fork release line."
+}
