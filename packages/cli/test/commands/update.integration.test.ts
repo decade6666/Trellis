@@ -51,7 +51,11 @@ vi.mock("giget", async () => {
 // === Imports ===
 
 import { init } from "../../src/commands/init.js";
-import { update } from "../../src/commands/update.js";
+import {
+  update,
+  classifyMigrations,
+  executeMigrations,
+} from "../../src/commands/update.js";
 import { VERSION } from "../../src/constants/version.js";
 import { DIR_NAMES, FILE_NAMES, PATHS } from "../../src/constants/paths.js";
 import { computeHash } from "../../src/utils/template-hash.js";
@@ -62,7 +66,15 @@ import {
   COPILOT_INSTRUCTIONS_PATH,
   getCopilotInstructions,
 } from "../../src/templates/copilot/index.js";
-import { replacePythonCommandLiterals } from "../../src/configurators/shared.js";
+import {
+  replacePythonCommandLiterals,
+  resolveSkills,
+  resolveSkillsNeutral,
+  resolveAllAsSkillsNeutral,
+  resolveBundledSkills,
+  collectSkillTemplates,
+} from "../../src/configurators/shared.js";
+import { AI_TOOLS } from "../../src/types/ai-tools.js";
 
 // A managed template file that update always handles (Python script)
 const MANAGED_FILE = `${PATHS.SCRIPTS}/get_context.py`;
@@ -246,6 +258,17 @@ describe("update() integration", () => {
     expect(entries.filter((e) => e.startsWith(".backup-")).length).toBe(0);
   });
 
+  it("#1b current OpenCode templates are not classified as deprecated", async () => {
+    const startPath = ".opencode/commands/trellis/start.md";
+    await init({ yes: true, force: true, opencode: true });
+    expect(fs.existsSync(projectFile(startPath))).toBe(true);
+
+    await update({ dryRun: true });
+
+    const output = vi.mocked(console.log).mock.calls.flat().join("\n");
+    expect(output).not.toContain(`${startPath} (modified, skipped)`);
+  });
+
   it("[issue-zcode-codex-upgrade] zcode private skills do not trigger legacy Codex backfill", async () => {
     await init({ yes: true, force: true, zcode: true });
 
@@ -284,6 +307,87 @@ describe("update() integration", () => {
       fs.existsSync(projectFile(".zcode/agents/trellis-research.md")),
     ).toBe(true);
     expect(fs.existsSync(projectFile(".agents/skills"))).toBe(false);
+  });
+
+  it("[issue-447] rename-dir migration moves legacy .pi/skills/ into shared .agents/skills/ even when Codex already installed the shared root", async () => {
+    // Simulate a pre-0.6.18 project: Pi + Codex both installed. Pre-fix Pi
+    // wrote its own Pi-flavored copy under `.pi/skills/` (via resolveSkills,
+    // not resolveSkillsNeutral), while Codex already wrote the shared,
+    // neutral `.agents/skills/` root. Reproduces the #447 repro shape.
+    await init({ yes: true, force: true, pi: true, codex: true });
+
+    const neutralContent = readProjectFile(
+      ".agents/skills/trellis-update-spec/SKILL.md",
+    );
+
+    const piCtx = AI_TOOLS.pi.templateContext;
+    const legacyPiSkillFiles = collectSkillTemplates(
+      ".pi/skills",
+      resolveSkills(piCtx),
+      resolveBundledSkills(piCtx),
+    );
+
+    const legacyContent = legacyPiSkillFiles.get(
+      ".pi/skills/trellis-update-spec/SKILL.md",
+    );
+    expect(legacyContent).toBeDefined();
+    expect(legacyContent).not.toBe(neutralContent);
+
+    const hashes = readHashesV2(hashFilePath());
+    for (const [relativePath, content] of legacyPiSkillFiles) {
+      writeProjectFile(relativePath, content);
+      hashes[relativePath] = computeHash(content);
+    }
+    writeHashesV2(hashFilePath(), hashes);
+
+    expect(fs.existsSync(projectFile(".pi/skills/trellis-update-spec"))).toBe(
+      true,
+    );
+    expect(
+      fs.existsSync(projectFile(".agents/skills/trellis-update-spec")),
+    ).toBe(true);
+
+    const codexCtx = AI_TOOLS.codex.templateContext;
+    const currentTemplates = new Map<string, string>([
+      ...collectSkillTemplates(
+        ".agents/skills",
+        resolveAllAsSkillsNeutral(codexCtx),
+        resolveBundledSkills(codexCtx),
+      ),
+      ...collectSkillTemplates(
+        ".agents/skills",
+        resolveSkillsNeutral(piCtx),
+        resolveBundledSkills(piCtx),
+      ),
+    ]);
+
+    const migrationItem = {
+      type: "rename-dir" as const,
+      from: ".pi/skills",
+      to: ".agents/skills",
+    };
+    const finalHashes = readHashesV2(hashFilePath());
+    const classified = classifyMigrations(
+      [migrationItem],
+      tmpDir,
+      finalHashes,
+      currentTemplates,
+    );
+
+    expect(classified.conflict).toHaveLength(0);
+    expect(classified.auto).toHaveLength(1);
+
+    await executeMigrations(
+      classified,
+      tmpDir,
+      { force: true, skipAll: false },
+      currentTemplates,
+    );
+
+    expect(fs.existsSync(projectFile(".pi/skills"))).toBe(false);
+    expect(
+      readProjectFile(".agents/skills/trellis-update-spec/SKILL.md"),
+    ).toBe(neutralContent);
   });
 
   it("#2 dry run makes no file changes even when changes exist", async () => {

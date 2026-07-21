@@ -23,6 +23,7 @@ import {
 } from "@decade666/trellis-core/channel";
 
 import { getAdapter, type Provider } from "./adapters/index.js";
+import type { CodexSandboxMode } from "./adapters/codex.js";
 import { appendEvent } from "./store/events.js";
 import { workerFile } from "./store/paths.js";
 import { scheduleSupervisorIdleTimer } from "./supervisor/idle.js";
@@ -69,6 +70,8 @@ export interface SupervisorConfig {
   /** Worker inbox delivery policy (recorded on `spawned`; default
    *  `explicitOnly`). */
   inboxPolicy?: InboxPolicy;
+  /** Codex-only: overrides the `thread/start` sandbox mode. */
+  sandbox?: CodexSandboxMode;
 }
 
 type Child = ChildProcessByStdio<Writable, Readable, Readable>;
@@ -158,6 +161,7 @@ export async function runSupervisor(
     model: config.model,
     systemPrompt: config.systemPrompt,
     cwd: config.cwd,
+    ...(config.sandbox ? { sandbox: config.sandbox } : {}),
   };
   const args = adapter.buildArgs(view);
 

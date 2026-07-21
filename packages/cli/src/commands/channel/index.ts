@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { InvalidArgumentError, type Command } from "commander";
 
 import { isProvider, listProviders, type Provider } from "./adapters/index.js";
+import { parseCodexSandboxMode } from "./adapters/codex.js";
 import {
   channelContextAdd,
   channelContextDelete,
@@ -329,6 +330,10 @@ export function registerChannelCommand(program: Command): void {
       "spawn-time live-worker budget for this project/scope (default 6; 0 disables)",
       parseNonNegativeInteger,
     )
+    .option(
+      "--sandbox <mode>",
+      "Codex-only: sandbox mode for worker thread/start (read-only | workspace-write | danger-full-access)",
+    )
     .action(async (name: string, raw: Record<string, unknown>) => {
       const opts = raw as {
         agent?: string;
@@ -346,11 +351,22 @@ export function registerChannelCommand(program: Command): void {
         inboxPolicy?: string;
         idleTimeout?: string;
         maxLiveWorkers?: number;
+        sandbox?: string;
       };
       if (opts.provider !== undefined && !isProvider(opts.provider)) {
         console.error(
           chalk.red("Error:"),
           `--provider must be one of: ${listProviders().join(", ")}`,
+        );
+        process.exit(1);
+      }
+      let sandbox;
+      try {
+        sandbox = parseCodexSandboxMode(opts.sandbox);
+      } catch (err) {
+        console.error(
+          chalk.red("Error:"),
+          err instanceof Error ? err.message : err,
         );
         process.exit(1);
       }
@@ -367,6 +383,7 @@ export function registerChannelCommand(program: Command): void {
           files: opts.file,
           jsonls: opts.jsonl,
           by: opts.by,
+          sandbox,
           scope: opts.scope,
           inboxPolicy: parseInboxPolicy(opts.inboxPolicy),
           idleTimeoutMs: parseDuration(opts.idleTimeout),
