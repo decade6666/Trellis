@@ -26,3 +26,8 @@ project_doc_fallback_filenames = ["AGENTS.md"]
 # aborts the entire config load and blocks Codex from starting. Codex's own
 # default for multi_agent_v2 is used instead; tune it in your user-level
 # config if needed.
+
+# Pin the subagent recursion depth explicitly instead of relying on Codex's
+# default. Project config takes precedence over user-level ~/.codex/config.toml.
+[agents]
+max_depth = 1
