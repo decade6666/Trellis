@@ -1,4 +1,4 @@
-# Continue Current Task
+# 继续当前任务
 
 Resume work on the current task — pick up at the right phase/step in `.trellis/workflow.md`.
 
