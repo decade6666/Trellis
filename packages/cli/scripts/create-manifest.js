@@ -265,7 +265,7 @@ async function main() {
     output: process.stdout,
   });
 
-  console.log("\n📝 Create Migration Manifest\n");
+  console.log("\n📝 创建迁移清单\n");
   console.log(`Current package.json version: ${currentVersion}`);
   if (!versionArg && hint) {
     console.log(`Hint: ${hint}`);

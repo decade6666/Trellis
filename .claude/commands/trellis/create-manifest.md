@@ -1,4 +1,4 @@
-# Create Migration Manifest
+# 创建迁移清单
 
 Create a migration manifest for a new patch, beta, rc, or minor release based on commits since the previous release.
 
