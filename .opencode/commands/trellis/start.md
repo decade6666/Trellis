@@ -1,4 +1,4 @@
-# Start Session
+# 开始会话
 
 Initialize a Trellis-managed development session. This platform has no session-start hook, so manually load the equivalent compact context by following these steps.
 

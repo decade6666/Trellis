@@ -1,8 +1,8 @@
 ---
-description: "Trellis Copilot prompt: Finish Work — survey + archive task + record session journal"
+description: "Trellis Copilot 提示：完成工作 — 检查 + 归档任务 + 记录会话日志"
 ---
 
-# Finish Work
+# 完成工作
 
 Wrap up the current session: archive the active task (and any other completed-but-unarchived tasks the user wants to clean up) and record the session journal. Code commits are NOT done here — those happen in workflow Phase 3.4 before you invoke this prompt.
 

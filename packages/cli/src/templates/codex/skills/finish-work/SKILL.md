@@ -3,7 +3,7 @@ name: finish-work
 description: "Wrap up an active Trellis task: archive it (and any other completed-but-unarchived tasks the user wants to clean up) and record a session journal. Refuses to run if the working tree has uncommitted code changes (those belong in workflow Phase 3.4 first). Use when the user asks to finish / wrap up / call it a day, or invokes $finish-work."
 ---
 
-# Finish Work
+# 完成工作
 
 Wrap up the current session: archive the active task (and any other completed-but-unarchived tasks the user wants to clean up) and record the session journal. Code commits are NOT done here — those happen in workflow Phase 3.4 before you invoke this skill.
 

@@ -279,10 +279,9 @@ export function wrapWithSkillFrontmatter(
  * SKILL_DESCRIPTIONS, which is long prose aimed at the skill matcher.
  */
 const COMMAND_DESCRIPTIONS: Record<string, string> = {
-  start: "Initialize a Trellis development session.",
-  continue: "Resume work on the current task at the correct phase.",
-  "finish-work":
-    "Wrap up the current session: quality gate, commit reminder, archive, journal.",
+  start: "初始化 Trellis 开发会话。",
+  continue: "在正确的阶段继续当前任务。",
+  "finish-work": "结束当前会话：质量检查、提交提醒、归档、日志。",
 };
 
 /** Wrap resolved command content with YAML frontmatter (name + description). */

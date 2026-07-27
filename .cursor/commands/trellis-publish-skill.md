@@ -1,4 +1,4 @@
-# Publish Skill to Docs Site
+# 发布 Skill 到文档站
 
 Sync a marketplace skill to the documentation site. Creates skill detail pages (EN/ZH), updates the marketplace index, and updates docs.json navigation.
 

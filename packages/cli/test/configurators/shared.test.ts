@@ -579,26 +579,26 @@ describe("resolveSkillsNeutral / resolveAllAsSkillsNeutral", () => {
 describe("wrapWithOmpFrontmatter", () => {
   it("wraps continue command with description-only frontmatter", () => {
     const content =
-      "# Continue Current Task\n\nResume work on the current task.";
+      "# 继续当前任务\n\nResume work on the current task.";
     const result = wrapWithOmpFrontmatter("continue", content);
     expect(result).toMatch(/^---\ndescription: .+\n---\n\n/);
-    expect(result).not.toContain("# Continue Current Task");
+    expect(result).not.toContain("# 继续当前任务");
     expect(result).toContain("Resume work on the current task.");
     expect(result).not.toContain("argument-hint");
   });
 
   it("wraps finish-work command with description + argument-hint", () => {
-    const content = "# Finish Work\n\nWrap up the current session.";
+    const content = "# 完成工作\n\nWrap up the current session.";
     const result = wrapWithOmpFrontmatter("finish-work", content);
     expect(result).toMatch(
       /^---\ndescription: .+\nargument-hint: "\[task-name\]"\n---\n\n/,
     );
-    expect(result).not.toContain("# Finish Work");
+    expect(result).not.toContain("# 完成工作");
     expect(result).toContain("Wrap up the current session.");
   });
 
   it("strips trellis- prefix before looking up description", () => {
-    const content = "# Continue Current Task\n\nBody text.";
+    const content = "# 继续当前任务\n\nBody text.";
     const result = wrapWithOmpFrontmatter("trellis-continue", content);
     expect(result).toMatch(/^---\ndescription: /);
     expect(result).toContain("Body text.");
