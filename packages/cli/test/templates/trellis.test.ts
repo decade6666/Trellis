@@ -27,6 +27,7 @@ import {
   getAllAgents,
   implementAgentTemplate,
   checkAgentTemplate,
+  configYamlTemplate,
 } from "../../src/templates/trellis/index.js";
 
 // =============================================================================
@@ -391,5 +392,44 @@ describe("getAllAgents", () => {
         `${file} name field should equal "${expectedName}"`,
       ).toBe(expectedName);
     }
+  });
+});
+
+// config.yaml — context_injection section (issue #441)
+// =============================================================================
+
+describe("configYamlTemplate: context_injection section", () => {
+  it("documents the context_injection block, fully commented out", () => {
+    expect(configYamlTemplate).toContain("context_injection:");
+    expect(configYamlTemplate).toContain("#   max_file_bytes: 32768");
+    expect(configYamlTemplate).toContain("#   max_artifact_bytes: 65536");
+    expect(configYamlTemplate).toContain("#   max_total_bytes: 131072");
+    // Every context_injection line must be commented — the section ships
+    // inert by default (matches the codex.dispatch_mode precedent).
+    const lines = configYamlTemplate.split("\n");
+    const start = lines.findIndex((l) => l.includes("context_injection:"));
+    expect(start).toBeGreaterThan(-1);
+    for (const line of lines.slice(start, start + 4)) {
+      expect(line.trimStart().startsWith("#")).toBe(true);
+    }
+  });
+
+  it("documents the prompt_injection skip keyword, fully commented out", () => {
+    expect(configYamlTemplate).toContain("prompt_injection:");
+    expect(configYamlTemplate).toContain('skip_keyword: "no-trellis"');
+    const lines = configYamlTemplate.split("\n");
+    const start = lines.findIndex((l) => l.includes("prompt_injection:"));
+    expect(start).toBeGreaterThan(-1);
+    for (const line of lines.slice(start, start + 2)) {
+      expect(line.trimStart().startsWith("#")).toBe(true);
+    }
+  });
+
+  it("keeps fork collab / codeagent-wrapper and Codex inline defaults", () => {
+    expect(configYamlTemplate).toContain("collab:");
+    expect(configYamlTemplate).toContain("codeagent-wrapper");
+    expect(configYamlTemplate).toContain("dispatch_mode: inline");
+    expect(configYamlTemplate).not.toMatch(/Default \("auto"\)/);
+    expect(configYamlTemplate).not.toMatch(/dispatch_mode: auto/);
   });
 });
