@@ -76,3 +76,39 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: 评估上游同步可行性并完成规划
+
+**Date**: 2026-07-27
+**Task**: 评估上游同步可行性并完成规划
+**Branch**: `worktree-upstream-sync-assessment`
+
+### Summary
+
+完成上游分叉评估、稳定性同步分批规划与审阅；父规划已批准，实施仍需逐个子任务授权。
+
+### Main Changes
+
+- 完成 68 个 upstream-only commits 的同步可行性评估，并判定整支 merge/rebase 风险为 CRITICAL。
+- 形成稳定性优先的四个独立 PR 规划，完成父子 PRD/design/implement 与最终一致性复核。
+- 用户批准父规划；未启动任何子任务，未修改产品或 CI 代码。
+- 使用 /usr/lib/node_modules/@decade666/trellis/bin/codeagent-wrapper.mjs 验证 Codex 与 agy 后端，均返回预期标记。
+- 本轮仅规划和连通性验证，未运行代码测试。
+
+
+### Git Commits
+
+(No commits - planning session)
+
+### Testing
+
+- 未运行代码测试；已完成规划一致性检查、Git 状态检查，以及 Codex/agy 后端连通性验证。
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
