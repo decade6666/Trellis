@@ -126,10 +126,17 @@ Runtime parser contract:
 
 Native source-of-truth contract:
 
-- `packages/cli/src/templates/trellis/workflow.md` is the source of truth for
-  native workflow.
-- If `marketplace/workflows/native/workflow.md` exists, tests must enforce byte
-  identity with the bundled native template.
+- `packages/cli/src/templates/trellis/workflow.md` is the source of truth for the
+  CLI-bundled native workflow.
+- The fork marketplace may lead the CLI registry with platform-only additions.
+  Therefore `marketplace/workflows/native/workflow.md` is not required to be
+  byte-identical to the bundled template.
+- When the marketplace native file exists, tests must enforce structural
+  compatibility instead: the ordered `#### X.Y` step IDs and the ordered unique
+  `[workflow-state:*]` marker names must match, and both files must retain the
+  fork's `codeagent-wrapper` guidance.
+- CLI-supported pull-based platforms must still appear in the bundled Phase 2.1
+  marker block; marketplace-only platform names do not imply CLI registry support.
 
 ### 4. Validation & Error Matrix
 
@@ -145,6 +152,7 @@ Native source-of-truth contract:
 | `init --workflow missing-id` | Reject; do not print and return success |
 | `init --workflow tdd` | Write marketplace content and remove `.trellis/workflow.md` hash |
 | `trellis update` after switching to non-native | Treat workflow as modified/user-managed; never silently restore native |
+| Marketplace native adds platforms ahead of the CLI registry | Allow content divergence; fail tests if ordered step IDs, workflow-state markers, or `codeagent-wrapper` guidance drift |
 
 ### 5. Good/Base/Bad Cases
 
@@ -179,8 +187,10 @@ Integration tests:
 - `--create-new` writes a generated `workflow.md.new` file beside `.trellis/workflow.md` and does not touch the active
   workflow or hash.
 - `trellis update` after switching to non-native does not restore native.
-- Marketplace native mirror matches bundled native workflow when the mirror file
-  exists.
+- Marketplace native workflow keeps the same ordered step IDs and workflow-state
+  marker names as the bundled native workflow when the mirror file exists; its
+  platform lists and platform-specific instructions may be a strict superset.
+- Bundled Phase 2.1 routing covers every CLI-supported pull-based platform.
 - Real `marketplace/workflows/tdd/workflow.md` planning breadcrumbs include the
   TDD gates: observable behavior slices, public interface under test, and mock
   boundaries.
