@@ -132,3 +132,130 @@ without the guard**:
 - [`trellis channel` Command](./commands-channel.md) — store paths, project buckets
 - [Script Conventions](./script-conventions.md) — Python `io.py` contract
 - [Migrations](./migrations.md) — rename/rename-dir/delete semantics
+
+## Channel Context Trust Set (`channel.trusted_context_dirs`, #414)
+
+### 1. Scope / Trigger
+
+Apply this contract whenever Channel or the OMP extension reads context or agent
+files whose realpath may fall outside the worker/project cwd. This includes
+`--file`, `--jsonl`, JSONL `file` rows, agent definitions, and OMP task context.
+The trust set expands the realpath jail only through explicit configuration or
+narrow top-level Trellis workspace symlinks.
+
+### 2. Signatures
+
+```typescript
+resolveTrustedRoots(cwd: string): string[]
+assembleContext(
+  cwd: string,
+  files: string[],
+  jsonls: string[],
+  trustedRoots?: string[],
+): string
+loadAgent(name: string, cwd: string, trustedRoots?: string[]): AgentDefinition
+```
+
+The OMP template keeps standalone equivalents because generated extensions
+cannot import the CLI package:
+
+```typescript
+resolveTrustedRoots(projectRoot: string): string[]
+resolveProjectFile(
+  projectRoot: string,
+  file: string,
+  trustedRoots?: string[],
+): string | null
+```
+
+### 3. Contracts
+
+1. `.trellis/config.yaml` → `channel.trusted_context_dirs` is a string list.
+   Relative entries resolve against cwd; every accepted entry is
+   realpath-canonicalized and roots are deduplicated.
+2. Unless `channel.auto_trust_trellis_symlinks` is explicitly `false`, only the
+   top-level `.trellis/tasks` and `.trellis/workspace` entries contribute their
+   realpath targets, and only when those entries are themselves symlinks. Do not
+   recurse and do not auto-trust `.trellis/agents` or nested task symlinks.
+3. Every candidate is allowed only when its realpath is inside cwd or a trusted
+   root. The containment predicate must be identical in context-loader,
+   agent-loader, and OMP:
+
+   ```typescript
+   candidate === root || candidate.startsWith(root + path.sep)
+   ```
+
+   `path.sep` is load-bearing: it blocks `/work/ws-evil` from matching
+   `/work/ws`. It also means filesystem root is not treated as a universal
+   trust root; OMP must not substitute a `path.relative` predicate that changes
+   this edge case.
+4. `resolveTrustedRoots(cwd)` runs once per spawn and its result is passed to
+   both agent and context loading. OMP resolves once per task-context build.
+5. Existing realpath and read-time symlink checks remain in place. Trust roots
+   supplement the jail; they do not replace it with lexical containment.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Config missing, list empty, and no top-level symlink | Return `[]`; preserve cwd-only behavior |
+| Relative allowlist entry | Resolve against cwd, then canonicalize with realpath |
+| Allowlist entry missing or invalid | Warn on CLI and skip; never add an unresolved lexical path |
+| `auto_trust_trellis_symlinks: false` | Disable auto-trust; explicit allowlist still applies |
+| Invalid auto-trust value | Warn and treat as unset, preserving the documented default |
+| `tasks`/`workspace` is a real directory | Do not add it as an extra root |
+| Nested symlink escapes cwd and roots | Reject |
+| Candidate shares only a string prefix with a root | Reject |
+| Trusted root is filesystem root | Accept only exact root under the shared predicate, not every absolute path |
+| Agent name contains path separators or traversal | Reject before filesystem lookup |
+
+### 5. Good / Base / Bad Cases
+
+- **Good**: `.trellis/tasks` is a top-level symlink to a user-managed external
+  task store. Its manifest and referenced files are readable because their
+  realpaths remain under the one auto-trusted target.
+- **Base**: tasks and workspace are normal directories and no allowlist is
+  configured. The trust set is empty and legacy cwd-only behavior is unchanged.
+- **Bad**: a nested task symlink points at `/etc/passwd`, a candidate lives in a
+  prefix sibling such as `trusted-evil`, or OMP uses `path.relative` while CLI
+  uses the required predicate. All must be rejected or caught by tests.
+
+### 6. Tests Required
+
+- Parser tests for missing config, comments, allowlist list termination,
+  relative paths, booleans, and invalid auto-trust values.
+- Runtime tests for default-empty roots, explicit allowlist, top-level
+  tasks/workspace symlinks, auto-trust disabled, missing roots, and deduplication.
+- Negative context tests for `/etc/passwd`, `..` escape, nested symlinks,
+  prefix-sibling paths, and filesystem-root trust.
+- Agent-loader tests for normal cwd agents, trusted external agents, and unsafe
+  names.
+- OMP tests that guard the actual containment expression and prohibit a
+  `path.relative` replacement; template-only string presence is insufficient.
+- Fork regression checks preserving Antigravity registration,
+  `@decade666/trellis-core`, sandbox behavior, and collab configuration.
+
+### 7. Wrong vs Correct
+
+Wrong:
+
+```typescript
+// Lexical/prefix checks permit sibling-prefix or cross-runtime drift.
+return candidate.startsWith(root);
+// OMP-only alternative with different root semantics:
+return !path.relative(root, candidate).startsWith("..");
+```
+
+Correct:
+
+```typescript
+const real = realpathSync(candidate);
+return roots.some(
+  (root) => real === root || real.startsWith(root + path.sep),
+);
+```
+
+The OMP template carries a standalone parser/resolver, but its containment
+expression and edge-case tests must stay aligned with the CLI implementation.
+Do not relax realpath containment; it is the defense established by the
+2026-07-10 audit (#409 family).
