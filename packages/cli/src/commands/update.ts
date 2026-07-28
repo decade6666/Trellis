@@ -60,6 +60,7 @@ import {
   isManagedRootDir,
 } from "../configurators/index.js";
 import { replacePythonCommandLiterals } from "../configurators/shared.js";
+import { ensureGitattributes } from "../configurators/workflow.js";
 import { pruneOrphanManifestKeys } from "../utils/manifest-prune.js";
 import {
   fetchRegistrySpecTemplates,
@@ -2382,6 +2383,14 @@ export async function update(options: UpdateOptions): Promise<void> {
         "   After this update, hash tracking will accurately detect changes.\n",
       ),
     );
+  }
+
+  // Ensure project-root .gitattributes carries the journal merge=union rule.
+  // Additive-only (see ensureGitattributes) — runs regardless of whether
+  // other template files changed, so it must sit before the "nothing to do"
+  // early-return below. Never touches disk in --dry-run.
+  if (!options.dryRun) {
+    ensureGitattributes(cwd);
   }
 
   // Check if there's anything to do
