@@ -6,7 +6,6 @@
 ---
 
 
-
 ## Session 1: codeagent-wrapper 多后端派发 + 固定单一路径
 
 **Date**: 2026-07-15
@@ -78,7 +77,74 @@
 - None - task complete
 
 
-## Session 3: 评估上游同步可行性并完成规划
+## Session 3: 上游选择性移植评估与落地
+
+**Date**: 2026-07-21
+**Task**: 上游选择性移植评估与落地
+**Branch**: `feat/upstream-selective-port`
+
+### Summary
+
+三路 review 评估 mindfold-ai/Trellis 分叉后 35 提交；价值优先选择性移植 update 安全/task 契约/mem/Grok/platforms--json/channel sandbox 等，保留 decade6666/codeagent-wrapper/antigravity/0.6.17；提交 ce6666c6 并开 PR #1（feat/upstream-selective-port）。暂缓 ZCode 整包、native codex auto、marketplace 子模块、brainstorm/SessionStart 全文。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `ce6666c6` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
+
+
+## Session 4: 上游2-6项设计 + 批A max_depth + 批B brainstorm/SessionStart
+
+**Date**: 2026-07-21
+**Task**: 上游2-6项设计 + 批A max_depth + 批B brainstorm/SessionStart
+**Branch**: `main`
+
+### Summary
+
+三路评估2-6项adapt可行性；批A同步dogfood max_depth=1；批B移植Planning Contract与自适应SessionStart；trellis-check PASS；开PR #2/#3；归档3任务。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `70670c35` | (see git log) |
+| `1ce6f36f` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
+
+
+## Session 5: 评估上游同步可行性并完成规划
 
 **Date**: 2026-07-27
 **Task**: 评估上游同步可行性并完成规划
@@ -114,7 +180,7 @@
 - None - task complete
 
 
-## Session 4: 归档上游同步子任务
+## Session 6: 归档上游同步子任务
 
 **Date**: 2026-07-28
 **Task**: 归档上游同步子任务
