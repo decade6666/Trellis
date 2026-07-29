@@ -1,0 +1,4 @@
+{"file":".trellis/tasks/07-28-upstream-0.6.10-sync-assessment/research/upstream-lineage.md","reason":"Pins repository identity, upstream tag provenance, ancestry, and reproducible comparison baselines."}
+{"file":".trellis/tasks/07-28-upstream-0.6.10-sync-assessment/research/local-customizations.md","reason":"Defines prior selective ports, fork red lines, and high-conflict areas that constrain classifications."}
+{"file":".trellis/tasks/07-28-upstream-0.6.10-sync-assessment/research/v0.6.10-commit-inventory.md","reason":"Provides the complete three-commit and 36-path v0.6.10 delta inventory with classifications."}
+{"file":".trellis/tasks/07-28-upstream-0.6.10-sync-assessment/research/v0.6.10-compatibility.md","reason":"Provides independent semantic-equivalence, regression-risk, dependency, and validation analysis."}
