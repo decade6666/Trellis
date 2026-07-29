@@ -1003,6 +1003,125 @@ const onBeforeAgentStart = (event, ctx) => {
 };
 ```
 
+### Bounded Context Injection and Per-Turn Skip Contract
+
+#### 1. Scope / Trigger
+
+This contract applies when class-1 hooks/plugins or the Pi class-3 extension
+materialize task artifacts and JSONL-referenced files for a Trellis sub-agent.
+It also applies to the per-turn workflow-state hook/plugin when a user needs to
+mute only that turn's breadcrumb. Templates are authoritative; installed
+`.claude`, `.cursor`, `.codex`, `.opencode`, and `.trellis/scripts` mirrors must
+be refreshed with the same behavior.
+
+#### 2. Signatures
+
+Python configuration surfaces:
+
+```python
+get_context_injection_limits(repo_root: Path) -> dict[str, int]
+get_prompt_injection_config(repo_root: Path) -> dict[str, str]
+```
+
+Cross-runtime materialization inputs:
+
+```text
+context_injection.max_file_bytes     default 32768
+context_injection.max_artifact_bytes default 65536
+context_injection.max_total_bytes    default 131072
+prompt_injection.skip_keyword        default "no-trellis"
+```
+
+`0` disables the corresponding byte cap. An empty `skip_keyword` disables
+per-turn skipping.
+
+#### 3. Contracts
+
+- Read candidate content as bytes before decoding. JSONL-referenced content
+  containing NUL or invalid UTF-8 is binary and must never be inlined, even when
+  byte caps are disabled.
+- Apply `max_file_bytes` to JSONL references and `max_artifact_bytes` to
+  `prd.md`, `design.md`, and `implement.md`. Truncation must preserve valid
+  UTF-8 and append the platform-parity truncation notice.
+- Process JSONL references before planning artifacts. When adding the next
+  inline block would exceed `max_total_bytes`, emit an index notice containing
+  path, size, and reason instead of the body. Notices consume total budget.
+- Missing keys use defaults. Invalid or negative integer values fall back to
+  the default for that key and must not crash a hook or plugin.
+- The Python shared hook, OpenCode plugin, and Pi extension must keep default
+  values, candidate order, and notice wording semantically aligned.
+- A case-insensitive, escaped match of `prompt_injection.skip_keyword` using
+  `(?<![\w-])<keyword>(?![\w-])` mutes only the current per-turn
+  `<workflow-state>` output. It must not affect SessionStart or sub-agent
+  context injection.
+
+#### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Limit key is absent | Use its documented default |
+| Limit is `0` | Disable only that cap |
+| Limit is negative, non-integer, or otherwise invalid | Fall back to that key's default; do not abort injection |
+| Text exceeds its per-entry cap | UTF-8-safe truncate and append a truncation notice |
+| Next block exceeds total budget | Emit a charged index notice; do not inline the body |
+| JSONL reference contains NUL or invalid UTF-8 | Emit a charged binary-reference notice; never decode or inline |
+| Referenced path is missing or unreadable | Preserve the existing skip behavior; do not make the hook fail |
+| Prompt contains the configured keyword at a valid boundary | Exit/return successfully with empty per-turn output |
+| Prompt contains `foo-no-trellis` or `no-trellisfoo` | Do not skip; hyphen participates in the boundary guard |
+| `skip_keyword: ""` | Disable skip matching |
+
+#### 5. Good / Base / Bad Cases
+
+- **Good**: a large UTF-8 JSONL reference is safely truncated, later entries
+  become index notices when the total budget is exhausted, and all three
+  runtimes produce equivalent context.
+- **Base**: no new config sections exist. Defaults apply without migration and
+  ordinary small text files are injected in the established order.
+- **Bad**: a plugin decodes bytes before binary detection, treats `0` as the
+  default instead of cap-disabled, omits notice bytes from the budget, or lets
+  `no-trellis` mute SessionStart.
+
+#### 6. Tests Required
+
+- Integration tests for defaults, `0`, invalid values, UTF-8 boundary
+  truncation, total-budget downgrade, NUL content, invalid UTF-8, and notice
+  accounting.
+- Shared prompt-skip integration tests for default/custom/empty keywords,
+  case-insensitive matching, both word-boundary failures, and proof that
+  SessionStart and sub-agent injection still run.
+- OpenCode and Pi template tests that execute their generated code rather than
+  only searching source text.
+- Mirror checks that compare each authoritative template with its installed
+  dogfood counterpart byte-for-byte.
+- Config-template assertions that retain fork-specific `collab`,
+  `codeagent-wrapper`, and Codex `dispatch_mode: inline` guidance.
+
+#### 7. Wrong vs Correct
+
+Wrong:
+
+```python
+text = path.read_text(encoding="utf-8", errors="replace")
+if max_bytes:
+    text = text[:max_bytes]
+```
+
+This can silently inline binary data, split by characters instead of bytes,
+and ignore the total context budget.
+
+Correct:
+
+```python
+raw = path.read_bytes()
+if is_binary_content(raw):
+    return binary_reference_notice(path, len(raw))
+content = truncate_utf8(raw, per_entry_limit)
+return budget.inline_or_index(path, len(raw), content, reason)
+```
+
+The concrete helper names differ by runtime, but byte-first detection,
+UTF-8-safe truncation, charged notices, and total-budget fallback are required.
+
 ### Subagent dispatch protocol — single source of truth
 
 The dispatch protocol text (the `Active task: <path>` first-line rule plus the class-1 / class-2 / class-3 platform notes) appears in **two writers** and they MUST stay in sync:

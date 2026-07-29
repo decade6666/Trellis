@@ -48,7 +48,7 @@ describe("omp templates", () => {
     expect(extension).not.toContain("process.env.TRELLIS_CONTEXT_ID =");
     expect(extension).toContain('buildContextKey("omp", "session", sessionId)');
     expect(extension).toContain("realpathSync");
-    expect(extension).toContain("resolveProjectFile(projectRoot, file)");
+    expect(extension).toContain("resolveProjectFile(projectRoot, file, trustedRoots)");
     expect(extension).toContain("readFileSync(targetPath");
     expect(extension).toContain("if (!key) return null;");
     expect(extension).toContain("return key;");
@@ -62,6 +62,53 @@ describe("omp templates", () => {
       "No identity: use single-session fallback only when there is exactly one session file.",
     );
     expect(extension).not.toContain("currentContextKey");
+  });
+
+  it("extension isInsideRoot matches CLI isUnderRoot (no path.relative jail)", () => {
+    // Templates cannot import the CLI package, so the containment predicate is
+    // duplicated. Lock the source form to the filesystem-safety contract:
+    //   real === root || real.startsWith(root + path.sep)
+    // path.relative-based jails diverge when root is "/" (they accept every
+    // absolute path under the filesystem root).
+    const extension = getExtensionTemplate();
+    expect(extension).toContain(
+      "candidate === root || candidate.startsWith(root + sep)",
+    );
+    expect(extension).not.toMatch(
+      /function isInsideRoot[\s\S]*?\brelative\s*\(/,
+    );
+    expect(extension).not.toContain('!rel.startsWith("../")');
+
+    const match = extension.match(
+      /function isInsideRoot\(root: string, candidate: string\): boolean \{\s*return ([^;]+);/,
+    );
+    expect(match).not.toBeNull();
+    const expr = match?.[1]?.trim();
+    expect(expr).toBe("candidate === root || candidate.startsWith(root + sep)");
+    if (!expr) {
+      throw new Error("isInsideRoot expression not extracted from OMP template");
+    }
+
+    // Evaluate the extracted expression so this is not only a string contract.
+    const isInsideRoot = new Function(
+      "root",
+      "candidate",
+      "sep",
+      `return (${expr});`,
+    ) as (root: string, candidate: string, sep: string) => boolean;
+    const check = (root: string, candidate: string) =>
+      isInsideRoot(root, candidate, path.sep);
+
+    // Mirror CLI isUnderRoot(real, root) argument order via (root, candidate).
+    expect(check("/work/ws", "/work/ws")).toBe(true);
+    expect(check("/work/ws", "/work/ws/file.md")).toBe(true);
+    expect(check("/work/ws", "/work/ws-evil/file.md")).toBe(false);
+    expect(check("/work/ws", "/work/other/file.md")).toBe(false);
+    // Filesystem root: startsWith("/" + sep) === startsWith("//"), so only
+    // the exact root path matches — never every absolute path.
+    expect(check("/", "/")).toBe(true);
+    expect(check("/", "/etc/passwd")).toBe(false);
+    expect(check("/", "/work/ws/file.md")).toBe(false);
   });
 
   it("extension template contains session context injection markers", () => {
