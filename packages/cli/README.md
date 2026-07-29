@@ -95,6 +95,17 @@ npm install -g @decade666/trellis@latest
 trellis update   # 刷新已有项目里的模板（含 collab 配置注释与 Pattern G/H）
 ```
 
+全局 `npm install -g`（且未加 `--ignore-scripts`）在安全条件下会额外创建 Claude 兼容链接：
+
+```text
+~/.claude/bin/codeagent-wrapper → <当前安装包>/bin/codeagent-wrapper.mjs
+```
+
+- 给外部 Claude / CCG 用的固定绝对路径；**Trellis 运行时仍只按「bundled wrapper → PATH」解析**，不会扫描 `~/.claude/bin`。
+- 已有普通文件、目录、CCG / custom / 指向其他前缀的 live link 一律保留，不会覆盖。
+- 限制：仅承诺 **npm global**；`--ignore-scripts`、Windows、缺少安全目录句柄路径（如 `/proc/self/fd`）的平台、非有效 uid 拥有或可被 group/other 写入的 HOME 会跳过；npm 可能抑制成功生命周期输出；无 uninstall 自动清理。
+- 手工验证：`readlink ~/.claude/bin/codeagent-wrapper`
+
 ### 从官方 Trellis / CCG 迁过来
 
 ```bash
@@ -174,8 +185,9 @@ collab:
   second_model:
     provider: antigravity
     # 默认：codeagent-wrapper --backend agy → 反重力 CLI
-    # 全局安装 `npm install -g @decade666/trellis` 后 `codeagent-wrapper` 在 PATH；
-    # 脚本仍位于包内 bin/codeagent-wrapper.mjs（与 trellis 同目录，无需装 CCG）。
+    # 全局安装后 `codeagent-wrapper` 在 PATH；脚本仍在包内 bin/codeagent-wrapper.mjs。
+    # 安全条件下另建 ~/.claude/bin/codeagent-wrapper（外部 Claude/CCG 用）；
+    # Trellis 运行时不扫描 home bin，仍走 bundled → PATH。
     # 如需自定义 wrapper，用 TRELLIS_CODEAGENT_WRAPPER 覆盖绝对路径；
     # wrapper 不可用时自动降级为直连 agy（agy --add-dir <cwd> -p <prompt>）。
     # 内置 wrapper 支持多后端：--backend agy|codex|claude|grok|kimi，
@@ -193,10 +205,12 @@ collab:
 
 ```bash
 # driver=codeagent-wrapper（默认）：全局安装后 codeagent-wrapper 在 PATH；只需 agy 在 PATH。
-#   脚本仍位于包内 bin/codeagent-wrapper.mjs（与 trellis 同目录，无需装 CCG）。
+#   脚本仍位于包内 bin/codeagent-wrapper.mjs；外部 Claude/CCG 可用
+#   ~/.claude/bin/codeagent-wrapper（安全条件下自动创建；运行时不扫描该路径）。
 #   wrapper 缺失或调用失败时自动降级为直连 agy。
 # 可选覆盖：export TRELLIS_CODEAGENT_WRAPPER=/abs/path/codeagent-wrapper.mjs  # 自定义 wrapper
 #           export TRELLIS_AGY_BIN=~/.local/bin/agy
+# 手工验证：readlink ~/.claude/bin/codeagent-wrapper
 
 # driver=cliproxy：需 CLIProxyAPI，鉴权用环境变量（勿提交密钥）
 export CLIPROXY_API_KEY="<CLIProxyAPI config 里 api-keys 列表中的值>"

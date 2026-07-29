@@ -1,6 +1,6 @@
 {
   "name": "@decade666/trellis",
-  "version": "0.6.17",
+  "version": "0.6.18",
   "description": "AI capabilities grow like ivy — Trellis provides the structure to guide them along a disciplined path",
   "type": "module",
   "main": "./dist/index.js",
@@ -29,6 +29,7 @@
     "typecheck": "tsc --noEmit",
     "lint:py": "basedpyright",
     "lint:all": "pnpm lint && pnpm lint:py",
+    "postinstall": "node ./bin/install-codeagent-wrapper-link.mjs",
     "prepublishOnly": "pnpm test && pnpm run build && cp ../../README.md ../../LICENSE .",
     "release": "node scripts/release.js patch",
     "release:minor": "node scripts/release.js minor",

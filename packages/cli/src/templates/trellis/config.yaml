@@ -164,6 +164,12 @@ channel:
 #     # Default driver: codeagent-wrapper --backend agy (Trellis-bundled wrapper).
 #     # On PATH after `npm install -g @decade666/trellis`; also still bundled as
 #     # package bin/codeagent-wrapper.mjs (sibling of the trellis binary).
+#     # When safe, global install also creates ~/.claude/bin/codeagent-wrapper
+#     # for external Claude/CCG. Trellis runtime does NOT scan home bin
+#     # (bundled → PATH only). Existing file/custom/live links are preserved.
+#     # Limits: npm global only; --ignore-scripts / Windows / missing safe
+#     # directory-fd path (for example /proc/self/fd) / unsafe HOME skip;
+#     # no uninstall cleanup. Verify: readlink ~/.claude/bin/codeagent-wrapper
 #     # Bundled wrapper supports --backend agy|codex|claude|grok|kimi.
 #     driver: codeagent-wrapper
 #     # Optional override via env TRELLIS_CODEAGENT_WRAPPER or yaml wrapper_path:

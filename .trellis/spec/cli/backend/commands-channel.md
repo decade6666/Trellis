@@ -854,6 +854,25 @@ where noted):
   falls through to bundled. Legacy env `CODEAGENT_WRAPPER` is removed. Shell /
   agent callers should invoke the bare `codeagent-wrapper` on PATH after global
   install (script still lives as package `bin/codeagent-wrapper.mjs`).
+- **Install-time Claude/CCG compatibility link** (orthogonal to runtime
+  resolution): package `postinstall` may create
+  `~/.claude/bin/codeagent-wrapper` → the currently installed package
+  `bin/codeagent-wrapper.mjs` when **all** of these hold: npm global install
+  (`npm_config_global=true`), `npm_lifecycle_event=postinstall`, top-level
+  package identity under the npm prefix (not under `INIT_CWD/node_modules`),
+  POSIX platform, effective-uid-owned non-group/other-writable real HOME, and a
+  validated regular-file sibling source. External Claude/CCG tools may call that
+  absolute path. Trellis runtime still prefers bundled → PATH and **must not**
+  start scanning home bin because of this link. Existing regular files,
+  directories, FIFOs, CCG/custom links, and live links to other prefixes are
+  preserved; only a missing destination or an exact-segment dangling Trellis
+  link may be created/repaired. Documented non-goals: `--ignore-scripts`,
+  Windows or platforms without a safe directory-fd path (for example
+  `/proc/self/fd`), npm suppressing successful lifecycle output, no uninstall
+  auto-cleanup, and no pnpm/yarn global promise. Manual check:
+  `readlink ~/.claude/bin/codeagent-wrapper`. Full filesystem jail / ownership /
+  race contract: [filesystem-safety.md](./filesystem-safety.md)
+  “Install-time HOME compatibility link”.
 - Antigravity collab default is unchanged: `--backend agy`, and on wrapper
   failure the runner degrades to a direct `agy --add-dir <cwd> [--model m] -p
   <prompt>` call.
