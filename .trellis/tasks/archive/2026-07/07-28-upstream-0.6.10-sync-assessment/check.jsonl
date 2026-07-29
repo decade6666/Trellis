@@ -1,0 +1,5 @@
+{"file":".trellis/tasks/07-28-upstream-0.6.10-sync-assessment/research/v0.6.10-commit-inventory.md","reason":"Check report completeness against the authoritative commit/path ledger and skip accounting."}
+{"file":".trellis/tasks/07-28-upstream-0.6.10-sync-assessment/research/v0.6.10-compatibility.md","reason":"Check semantic classifications, risks, dependencies, prior-port impact, and validation recommendations."}
+{"file":".trellis/tasks/07-28-upstream-0.6.10-sync-assessment/research/local-customizations.md","reason":"Check that every recommendation preserves fork red lines and prior selective-sync decisions."}
+{"file":".trellis/spec/cli/backend/index.md","reason":"Route the checker to current backend contracts without injecting oversized full specification files."}
+{"file":".trellis/spec/cli/unit-test/index.md","reason":"Validate the current CI testing contract referenced by the Python 3.9 recommendation."}
