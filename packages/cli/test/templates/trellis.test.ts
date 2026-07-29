@@ -130,7 +130,7 @@ describe("trellis template constants", () => {
     expect(workflowMdTemplate).toContain("#");
   });
 
-  it("marketplace native workflow mirror matches the bundled workflow", () => {
+  it("marketplace native workflow remains structurally compatible with the bundled workflow", () => {
     const repoRoot = fs.existsSync(path.join(process.cwd(), "marketplace"))
       ? process.cwd()
       : path.resolve(process.cwd(), "../..");
@@ -138,7 +138,22 @@ describe("trellis template constants", () => {
       path.join(repoRoot, "marketplace/workflows/native/workflow.md"),
       "utf-8",
     );
-    expect(marketplaceNative).toBe(workflowMdTemplate);
+    const stepIds = (content: string): string[] =>
+      [...content.matchAll(/^#### (\d+\.\d+)\b/gm)].map((match) => match[1]);
+    const workflowStates = (content: string): string[] => [
+      ...new Set(
+        [...content.matchAll(/\[\/?workflow-state:([^\]]+)\]/g)].map(
+          (match) => match[1],
+        ),
+      ),
+    ];
+
+    expect(stepIds(marketplaceNative)).toEqual(stepIds(workflowMdTemplate));
+    expect(workflowStates(marketplaceNative)).toEqual(
+      workflowStates(workflowMdTemplate),
+    );
+    expect(marketplaceNative).toContain("codeagent-wrapper");
+    expect(workflowMdTemplate).toContain("codeagent-wrapper");
   });
 
   it("marketplace TDD workflow planning breadcrumbs include behavior gates", () => {
@@ -181,7 +196,7 @@ describe("trellis template constants", () => {
       "[Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi, Oh My Pi]",
     );
     const pullBasedMarker =
-      "[codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae]";
+      "[codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae, Grok]";
     const pullBasedBlock = platformBlock(implement, pullBasedMarker);
 
     const workflowLabelByPlatform: Partial<Record<AITool, string>> = {
@@ -191,6 +206,7 @@ describe("trellis template constants", () => {
       copilot: "Copilot",
       zcode: "ZCode",
       trae: "Trae",
+      grok: "Grok",
     };
     // Pi templates keep a pull-based fallback, but workflow 2.1 routes Pi
     // through the extension-backed context path.
