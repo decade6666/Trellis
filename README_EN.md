@@ -82,6 +82,17 @@ npm install -g @decade666/trellis@latest
 trellis update   # refresh templates in existing projects
 ```
 
+A global `npm install -g` (without `--ignore-scripts`) also creates a Claude compatibility link when safe:
+
+```text
+~/.claude/bin/codeagent-wrapper → <current package>/bin/codeagent-wrapper.mjs
+```
+
+- Fixed absolute path for external Claude / CCG tools. **Trellis runtime still resolves only bundled wrapper → PATH** and never scans `~/.claude/bin`.
+- Existing regular files, directories, CCG / custom / live-other-prefix links are preserved; they are never overwritten.
+- Limits: **npm global only**; skip on `--ignore-scripts`, Windows, platforms without a safe directory-fd path such as `/proc/self/fd`, or a HOME that is not effective-uid-owned or is group/other-writable; npm may suppress successful lifecycle output; no uninstall auto-cleanup.
+- Manual check: `readlink ~/.claude/bin/codeagent-wrapper`
+
 ### Install from source (dev / before publish)
 
 ```bash
@@ -140,6 +151,8 @@ collab:
     # Default: Trellis-bundled codeagent-wrapper --backend agy
     # On PATH after `npm install -g @decade666/trellis`; also still at package
     # bin/codeagent-wrapper.mjs next to the trellis binary.
+    # When safe, also creates ~/.claude/bin/codeagent-wrapper for external
+    # Claude/CCG; Trellis runtime does not scan home bin (bundled → PATH only).
     driver: codeagent-wrapper
     # wrapper_path: /abs/path/to/codeagent-wrapper.mjs
     # wrapper_backend: agy
@@ -153,6 +166,8 @@ Second-model prerequisites:
 
 ```bash
 # driver=codeagent-wrapper (default): codeagent-wrapper on PATH after global install + agy on PATH
+# External Claude/CCG may use ~/.claude/bin/codeagent-wrapper (created when safe;
+# runtime does not scan that path). Verify: readlink ~/.claude/bin/codeagent-wrapper
 # Optional: export TRELLIS_CODEAGENT_WRAPPER=/abs/path/codeagent-wrapper.mjs
 
 # driver=cliproxy: CLIProxyAPI + env key (do not commit secrets)

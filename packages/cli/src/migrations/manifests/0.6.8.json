@@ -1,0 +1,9 @@
+{
+  "version": "0.6.8",
+  "description": "First public fork package rename to the @decade666 npm scope (initially published under the fork distribution scheme).",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Release packaging:**\n- chore(cli): publish the fork CLI/core packages under the decade666 npm scope and point package metadata at the fork repository.\n- docs: document npx/global install for the fork package names.\n\n**Continuity note:** the published tarball did not bundle a migration manifest. No filesystem migration was shipped in this package.",
+  "migrations": [],
+  "notes": "Continuity placeholder: the published package did not bundle this manifest; no filesystem migration shipped in that tarball.\n\nNo `--migrate` required for this version bucket. The Pi `.pi/skills` → `.agents/skills` rename is owned solely by `0.6.18.json` and must not be attributed here."
+}

@@ -259,3 +259,104 @@ The OMP template carries a standalone parser/resolver, but its containment
 expression and edge-case tests must stay aligned with the CLI implementation.
 Do not relax realpath containment; it is the defense established by the
 2026-07-10 audit (#409 family).
+
+## Install-time HOME compatibility link (`codeagent-wrapper`, #0.6.18)
+
+### 1. Scope / Trigger
+
+Apply when the CLI package `postinstall` helper
+(`packages/cli/bin/install-codeagent-wrapper-link.mjs`) considers writing
+`~/.claude/bin/codeagent-wrapper`. This is an intentional, fail-closed HOME
+side effect for external Claude/CCG tools. It does **not** change Trellis
+runtime wrapper resolution (bundled → PATH only; no home-bin scan). See also
+[commands-channel.md](./commands-channel.md) “Install-time Claude/CCG
+compatibility link”.
+
+### 2. Signatures
+
+```text
+Source (fixed): <package-root>/bin/codeagent-wrapper.mjs
+Dest   (fixed): os.homedir()/.claude/bin/codeagent-wrapper
+```
+
+No destination/source override env or config. Helper imports only `node:`
+built-ins; no package business modules, network, shell, or dynamic import.
+
+### 3. Contracts
+
+1. Side effects only when `npm_config_global === "true"`,
+   `npm_lifecycle_event === "postinstall"`, package root equals the realpath of
+   `<npm_config_prefix>/lib/node_modules/@decade666/trellis`, that root is not
+   under `INIT_CWD/node_modules`, and the platform exposes `O_DIRECTORY`,
+   `O_NOFOLLOW`, and a safe directory-fd path such as `/proc/self/fd`.
+2. HOME must already exist as a real directory owned by `process.getuid()` and
+   must not be group/other-writable. Never trust `SUDO_USER`. Never
+   chmod/chown existing HOME/`.claude`/`bin` nodes.
+3. Inspect HOME → `.claude` → `bin` one component at a time with `lstat`
+   (never follow parent symlinks). Create only missing real `.claude`/`bin`
+   dirs at `0o700`; after mkdir success or `EEXIST`, re-`lstat` and recheck
+   type/ownership/mode. Open each write parent with `O_DIRECTORY | O_NOFOLLOW`
+   and perform mkdir, leaf classification, `symlink`, temp cleanup, and `rename`
+   only through the pinned directory-fd path; never fall back to a lexical path.
+4. Leaf classification uses `lstat` + `readlink` only. Create without prior
+   unlink; on `EEXIST`, reclassify. Idempotent when the link already targets
+   the current source. Repair only a dangling symlink whose normalized
+   absolute target's last five path segments exactly equal
+   `["node_modules","@decade666","trellis","bin","codeagent-wrapper.mjs"]`
+   (never raw-string `endsWith`/`includes`). Preserve regular files,
+   directories, special nodes, CCG/custom links, and every live other-prefix
+   link.
+5. Stale-owned repair uses a cryptographically random same-directory temp
+   symlink, then a second parent-jail + leaf `lstat`/`readlink` check before
+   `rename`. On mismatch, remove only the temp node.
+6. Every compatibility failure emits a stable stderr reason code and exits 0
+   so npm install still succeeds. Manual verification:
+   `readlink ~/.claude/bin/codeagent-wrapper`.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Local / nested / forged-global / non-postinstall / Windows / missing safe directory-fd path | No HOME write; warn/skip, exit 0 |
+| HOME symlink, non-directory, ownership/mode mismatch | Skip; never follow or rewrite |
+| Parent `.claude`/`bin` symlink or jail escape | Skip; no destination write |
+| Existing file / dir / FIFO / custom / live link | Preserve + `preserve-existing` |
+| Exact dangling Trellis path segments | Repair only after second ownership checks |
+| `--ignore-scripts` / no uninstall hook | Documented non-goal; no auto cleanup |
+
+### 5. Good / Base / Bad Cases
+
+- **Good**: top-level `npm install -g @decade666/trellis` under an
+  effective-uid-owned HOME creates an absolute link to that prefix's
+  `bin/codeagent-wrapper.mjs`.
+- **Base**: local project dependency install or Trellis runtime resolution —
+  no home-bin scan and no HOME mutation from ordinary CLI use.
+- **Bad**: overwriting a CCG wrapper, following a parent symlink out of HOME,
+  raw-string “looks like Trellis” target matching, or failing the whole npm
+  install because the compatibility link could not be created.
+
+### 6. Tests Required
+
+Security matrix unit tests with injected fs/env/uid for lifecycle gates,
+parent jail, ownership/mode, collision preservation, create/`EEXIST` races,
+dangling exact-segment repair, live/changed-target repair races, missing safe
+fd namespace/flags, Windows skip, and catch-all exit 0. Packed global/local
+install smoke: supported global creates the link; local does not.
+
+### 7. Wrong vs Correct
+
+Wrong:
+
+```js
+// Scans home, overwrites unknown destinations, or fails install on error
+fs.symlinkSync(src, dest); // no jail / ownership / collision checks
+resolveWrapperPath = () => path.join(os.homedir(), ".claude/bin/codeagent-wrapper");
+```
+
+Correct:
+
+```js
+// postinstall: fail-closed jail + preserve unknown leaf; exit 0 on skip
+// runtime: TRELLIS_CODEAGENT_WRAPPER || bundled || "codeagent-wrapper" on PATH
+//          — never scan ~/.claude/bin
+```

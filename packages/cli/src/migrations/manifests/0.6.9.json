@@ -1,0 +1,9 @@
+{
+  "version": "0.6.9",
+  "description": "Republish the fork CLI so it depends on a registry-resolved @decade666/trellis-core instead of an invalid workspace protocol.",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Release packaging:**\n- chore(cli): bump to 0.6.9 after fixing npm dependency publish. 0.6.8 CLI was published with an invalid `workspace:*` core dependency; 0.6.9 depends on `@decade666/trellis-core@0.6.8` from the registry.\n\n**Continuity note:** the published tarball did not bundle a migration manifest. No filesystem migration was shipped in this package.",
+  "migrations": [],
+  "notes": "Continuity placeholder: the published package did not bundle this manifest; no filesystem migration shipped in that tarball.\n\nNo `--migrate` required for this version bucket."
+}
