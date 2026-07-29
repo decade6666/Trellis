@@ -474,9 +474,6 @@ collab:
     try {
       const resolved = resolveWrapperPath();
       expect(resolved).toBe(BUNDLED_WRAPPER);
-      // No more ~/.claude/bin or ~/.local/bin scanning.
-      expect(resolved).not.toContain(`${path.sep}.claude${path.sep}`);
-      expect(resolved).not.toContain(`${path.sep}.local${path.sep}`);
     } finally {
       restoreEnv(prev);
     }
