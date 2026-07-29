@@ -112,3 +112,41 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: 归档上游同步子任务
+
+**Date**: 2026-07-28
+**Task**: 归档上游同步子任务
+**Branch**: `feat/upstream-journal-merge-union`
+
+### Summary
+
+归档已合并的 Channel 可信目录、上下文注入稳定性、Journal 合并保护、CI 顺序与任务规范四个子任务。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `1a57854d` | (see git log) |
+| `d8e43aad` | (see git log) |
+| `81cae073` | (see git log) |
+| `ffd8f616` | (see git log) |
+| `ae675a0c` | (see git log) |
+| `ac23e536` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
