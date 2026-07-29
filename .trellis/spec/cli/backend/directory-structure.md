@@ -401,6 +401,127 @@ Packages that received a remote template download (tracked via `remoteSpecPackag
 
 ---
 
+## Workspace Journal Merge Behavior (parallel sessions / worktrees)
+
+### 1. Scope / Trigger
+
+Use this contract when installing or updating a Trellis project, or when a
+session appends to `.trellis/workspace/<developer>/journal-N.md`. Parallel
+worktrees and overlapping branches may append different session blocks to the
+same journal; `index.md` follows a different merge policy because it is a
+derived full-file rewrite.
+
+### 2. Signatures
+
+```typescript
+// packages/cli/src/configurators/workflow.ts
+export function ensureGitattributes(cwd: string): void
+```
+
+```python
+# .trellis/scripts/add_session.py and its shipped template
+def is_git_worktree(repo_root: Path) -> bool
+def warn_if_parallel_worktree(repo_root: Path) -> None
+```
+
+The attribute template and repository dogfood file must be byte-identical:
+
+```gitattributes
+.trellis/workspace/*/journal-*.md merge=union
+```
+
+### 3. Contracts
+
+- **`journal-N.md` auto-resolves.** Each session appends a new block, so Git's
+  built-in union merge retains both sides without conflict markers.
+- **`index.md` must not use union.** It rewrites counters and marker blocks as a
+  whole. A normal conflict is expected and safe because `index.md` is derived;
+  task truth remains in each task's `task.json`.
+- The rule lives in the project-root `.gitattributes`, not under `.trellis/`.
+  The shipped source is
+  `packages/cli/src/templates/trellis/gitattributes.txt`.
+- `ensureGitattributes()` is additive: missing file → create; existing journal
+  rule → no-op; existing user file without the rule → append without replacing
+  user content or joining onto a non-newline-terminated last line.
+- `trellis init` calls the helper during workflow creation. Non-dry-run
+  `trellis update` calls it before the "nothing to do" early return so legacy
+  projects are backfilled even when managed templates are otherwise current.
+- `add_session.py` emits one non-blocking stderr `[NOTE]` only when
+  `session_auto_commit` is enabled and Git reports a linked worktree
+  (`--git-dir` resolves differently from `--git-common-dir`). Main worktrees and
+  auto-commit-disabled projects remain quiet.
+- The dogfood and shipped `add_session.py` files must remain byte-identical;
+  warning logic must not change journal append, index rewrite, safe commit,
+  branch resolution, or CLI arguments.
+
+### 4. Validation & Error Matrix
+
+| Condition | Required behavior |
+|---|---|
+| Root `.gitattributes` is missing | Write the template |
+| Existing file contains `journal-*.md` + whitespace + `merge=union` | No-op; do not duplicate |
+| Existing user attributes omit the journal rule | Preserve all content and append the template safely |
+| Existing file has no final newline | Add separation before the template; never concatenate rules |
+| `trellis update --dry-run` | Do not create or modify `.gitattributes` |
+| Update has no managed-template changes | Still backfill the rule before returning up-to-date |
+| `index.md merge=union` appears | Fail tests; this attribute is forbidden |
+| `git rev-parse` fails | Treat as not a linked worktree; warning stays non-blocking |
+| Linked worktree + auto-commit enabled | Emit one stderr `[NOTE]` and continue |
+| Main worktree or auto-commit disabled | Emit no worktree note |
+
+### 5. Good / Base / Bad Cases
+
+- **Good**: two branches append different blocks to the same journal and a real
+  Git merge contains both blocks with no conflict markers; `index.md` still
+  receives a normal conflict under competing rewrites.
+- **Base**: a project already has the journal rule. Init/update leaves its
+  `.gitattributes` byte-for-byte unchanged.
+- **Bad**: update installs the rule after its early return, dry-run writes it,
+  the helper overwrites user attributes, or a broad `index.md merge=union` rule
+  silently interleaves marker blocks.
+
+### 6. Tests Required
+
+- A real-repository integration test proving union merge preserves both journal
+  appends and leaves competing `index.md` rewrites conflicted.
+- Init integration coverage proving the root file exists, includes the journal
+  rule, and excludes any `index.md` union rule.
+- Update integration coverage for backfill on an otherwise up-to-date project,
+  existing-rule no-op, user-content-preserving append with no final newline,
+  and dry-run no-write.
+- Linked-worktree script integration tests for main-tree silence,
+  linked+auto-commit warning, and linked+auto-commit-disabled silence.
+- Byte-for-byte mirror checks for both `.gitattributes` and `add_session.py`.
+
+### 7. Wrong vs Correct
+
+Wrong:
+
+```typescript
+// Overwrites user rules and may never run on an up-to-date project.
+if (changes.length > 0) {
+  writeFileSync(join(cwd, ".gitattributes"), gitattributesTemplate);
+}
+```
+
+```gitattributes
+# Union is unsafe for this derived full-file rewrite.
+.trellis/workspace/*/index.md merge=union
+```
+
+Correct:
+
+```typescript
+if (!options.dryRun) {
+  ensureGitattributes(cwd); // before the no-changes early return
+}
+```
+
+The helper preserves user attributes, appends only when required, and installs
+union behavior exclusively for append-only `journal-*.md` files.
+
+---
+
 ## Design Decisions
 
 ### Remote Template Download (giget)
