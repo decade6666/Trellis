@@ -182,7 +182,8 @@ third/
 doc/
 smoke_test/
 
-# Claude Code scheduled tasks session lock
+# Claude Code local worktrees and scheduled task lock
+.claude/worktrees/
 .claude/scheduled_tasks.lock
 
 tmp/
