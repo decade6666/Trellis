@@ -1,6 +1,6 @@
 ---
 name: trellis-check
-description: "Comprehensive quality verification: spec compliance, lint, type-check, tests, cross-layer data flow, code reuse, and consistency checks. Use when code is written and needs quality verification, before committing changes, or to catch context drift during long sessions."
+description: "进行全面质量验证：spec compliance、lint、type-check、tests、跨层数据流、代码复用和一致性检查。Use when code is written and needs quality verification, before committing changes, or to catch context drift during long sessions."
 ---
 
 # Code Quality Check

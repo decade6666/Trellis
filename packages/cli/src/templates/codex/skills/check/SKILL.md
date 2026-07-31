@@ -1,6 +1,6 @@
 ---
 name: check
-description: "Validates recently written code against project-specific development guidelines from .trellis/spec/. Identifies changed files via git diff, discovers applicable spec modules, runs lint and typecheck, and reports guideline violations. Use when code is written and needs quality verification, to catch context drift during long sessions, or before committing changes."
+description: "依据 .trellis/spec/ 中的项目特定开发规范校验最近编写的代码。通过 git diff 识别变更文件、发现适用的 spec 模块、运行 lint 和 typecheck，并报告规范违规。Use when code is written and needs quality verification, to catch context drift during long sessions, or before committing changes."
 ---
 
 # Code Quality Check

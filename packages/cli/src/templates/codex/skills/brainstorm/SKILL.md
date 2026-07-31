@@ -1,6 +1,6 @@
 ---
 name: brainstorm
-description: "Guide requirements discovery for a Trellis task after task-creation consent. Use when the user is ready to clarify requirements before implementation."
+description: "在获得 task-creation consent 后引导 Trellis task 的需求探索。Use when the user is ready to clarify requirements before implementation."
 ---
 
 # Trellis Brainstorm

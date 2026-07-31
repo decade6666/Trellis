@@ -1,6 +1,6 @@
 ---
 name: create-command
-description: "Scaffolds a new skill file with proper naming conventions and structure. Analyzes requirements to determine skill type and generates appropriate content. Use when adding a new developer workflow skill, creating a custom skill, or extending the Trellis skill set."
+description: "按正确的命名约定和结构生成新的 skill 文件脚手架。分析需求以确定 skill 类型，并生成合适内容。Use when adding a new developer workflow skill, creating a custom skill, or extending the Trellis skill set."
 ---
 
 # Create New Skill

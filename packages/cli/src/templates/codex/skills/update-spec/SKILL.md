@@ -1,6 +1,6 @@
 ---
 name: update-spec
-description: "Captures executable contracts and coding knowledge into .trellis/spec/ documents after implementation, debugging, or design decisions. Enforces code-spec depth for infra and cross-layer changes with mandatory sections for signatures, contracts, validation matrices, and test points. Use when a feature is implemented, a bug is fixed, a design decision is made, a new pattern is discovered, or cross-layer contracts change."
+description: "在实现、调试或设计决策之后，把可执行契约与编码知识沉淀到 .trellis/spec/ 文档中。对基础设施和跨层改动强制执行 code-spec 深度，要求包含 signatures、contracts、validation matrices 和 test points 等必填部分。Use when a feature is implemented, a bug is fixed, a design decision is made, a new pattern is discovered, or cross-layer contracts change."
 ---
 
 # Update Code-Spec - Capture Executable Contracts

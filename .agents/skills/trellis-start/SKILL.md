@@ -1,6 +1,6 @@
 ---
 name: trellis-start
-description: "Initializes an AI development session by reading workflow guides, developer identity, git status, active tasks, and project guidelines from .trellis/. Classifies incoming tasks and routes to brainstorm, direct edit, or task workflow. Use when beginning a new coding session, resuming work, starting a new task, or re-establishing project context."
+description: "通过读取 workflow 指南、developer 身份、git 状态、active tasks 和 .trellis/ 中的项目规范来初始化 AI 开发会话。对当前请求进行分类，并路由到 brainstorm、直接编辑或任务工作流。Use when beginning a new coding session, resuming work, starting a new task, or re-establishing project context."
 ---
 
 # 开始会话

@@ -1,6 +1,6 @@
 ---
 name: trellis-finish-work
-description: "Wrap up the current session: verify quality gate passed, remind user to commit, archive completed tasks, and record session progress to the developer journal. Use when done coding and ready to end the session."
+description: "收尾当前会话：确认质量检查已通过，提醒用户提交，归档已完成任务，并把会话进展记录到 developer journal。Use when done coding and ready to end the session."
 ---
 
 # 完成工作

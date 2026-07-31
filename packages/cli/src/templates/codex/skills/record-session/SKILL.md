@@ -1,6 +1,6 @@
 ---
 name: record-session
-description: "Records completed work progress to .trellis/workspace/ journal files after human testing and commit. Captures session summaries, commit hashes, and updates developer index files for future session context. Use when a coding session is complete, after the human has committed code, or to persist session knowledge for future AI sessions."
+description: "在人类完成测试和提交之后，把已完成工作的进展记录到 .trellis/workspace/ journal 文件中。捕获会话摘要、commit hash，并更新 developer index 文件，供后续会话读取上下文。Use when a coding session is complete, after the human has committed code, or to persist session knowledge for future AI sessions."
 ---
 
 [!] **Prerequisite**: This skill should only be used AFTER the human has tested and committed the code.
