@@ -1,6 +1,6 @@
 ---
 name: check
-description: "依据 .trellis/spec/ 中的项目特定开发规范校验最近编写的代码。通过 git diff 识别变更文件、发现适用的 spec 模块、运行 lint 和 typecheck，并报告规范违规。Use when code is written and needs quality verification, to catch context drift during long sessions, or before committing changes."
+description: "依据 .trellis/spec/ 中的项目规范校验最近写的代码：识别变更文件、匹配适用规范、运行代码与类型检查并报告违规。用于代码写完后验证或提交前把关。"
 ---
 
 # Code Quality Check

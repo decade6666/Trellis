@@ -1,6 +1,6 @@
 ---
 name: finish-work
-description: "收尾一个活跃的 Trellis task：归档它（以及用户想顺手清理的其他已完成但未归档任务），并记录 session journal。若工作树仍有未提交的代码改动则拒绝运行（这些应先在 workflow Phase 3.4 处理）。Use when the user asks to finish / wrap up / call it a day, or invokes $finish-work."
+description: "收尾进行中的任务：归档任务（含其他已完成未归档的任务）并记录会话日志；工作区仍有未提交代码时会拒绝执行。用于用户说要收工时。"
 ---
 
 # 完成工作

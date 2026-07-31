@@ -1,6 +1,6 @@
 ---
 name: improve-ut
-description: "分析变更文件，并依据 .trellis/spec/ 中 unit-test specs 的项目测试约定提升单元测试覆盖率。判断测试范围（unit / integration / regression），按现有模式新增或更新测试，并运行验证。Use when code changes need test coverage, after implementing a feature, after fixing a bug, or when test gaps are identified."
+description: "依据项目单元测试规范补强测试覆盖：分析变更文件、判定测试层级、按既有模式新增或更新测试并运行验证。用于实现功能后、修完缺陷后或发现测试缺口时。"
 ---
 
 # 改进单元测试 (UT)

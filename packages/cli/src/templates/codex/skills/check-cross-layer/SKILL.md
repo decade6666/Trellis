@@ -1,6 +1,6 @@
 ---
 name: check-cross-layer
-description: "在实现后跨多个代码维度进行验证：cross-layer data flow、代码复用分析、import path 校验和同层一致性检查。识别遗漏的更新点、类型不匹配和重复常量。Use when changes span 3+ architectural layers, after modifying shared constants or configs, after batch file modifications, or when creating new utility functions."
+description: "实现后做跨层验证：跨层数据流、代码复用、引用路径与同层一致性，找出遗漏的改动点、类型不匹配与重复常量。用于改动跨多层、调整共享常量或批量改文件后。"
 ---
 
 # Cross-Layer Check

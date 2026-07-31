@@ -1,6 +1,6 @@
 ---
 name: trellis-spec-bootstrap
-description: "用平台无关的单 agent 工作流初始化项目特定的 Trellis 编码 specs。Use when creating or refreshing .trellis/spec guidelines, analyzing a codebase with GitNexus、ABCoder 或源码检查，拆分 package/layer spec 工作，或编写基于真实代码库且不含占位内容的 spec 文档。"
+description: "用平台无关的单代理流程创建或刷新项目编码规范：分析真实代码库，拆分模块与分层，写出有据可依、不含占位内容的规范文档。"
 ---
 
 # Trellis Spec Bootstrap

@@ -1,6 +1,6 @@
 ---
 name: trellis-check
-description: "进行全面质量验证：spec compliance、lint、type-check、tests、跨层数据流、代码复用和一致性检查。Use when code is written and needs quality verification, before committing changes, or to catch context drift during long sessions."
+description: "全面质量验证：规范符合度、代码检查、类型检查、测试、跨层数据流、代码复用与一致性。用于代码写完后验证、提交前把关或长会话中纠偏。"
 ---
 
 # Code Quality Check

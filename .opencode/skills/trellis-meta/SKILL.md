@@ -1,6 +1,6 @@
 ---
 name: trellis-meta
-description: "理解并定制用户项目内的本地 Trellis 架构。Use when modifying .trellis 及各平台 hooks、settings、agents、skills、commands、prompts、workflows、channel runtime（trellis channel）、.trellis/agents/ 下的内置 runtime agents、可选 workflow templates、registry-backed spec refresh、由 trellis init 生成的跨会话记忆（trellis mem），或 AI-facing 内置技能（trellis-channel、trellis-session-insight、trellis-spec-bootstrap）及其自动分发流程。"
+description: "理解并定制项目内的 Trellis 架构：.trellis/ 目录、各平台钩子与设置、代理、技能、命令、工作流、协作通道与跨会话记忆。用于调整 Trellis 自身生成的文件时。"
 ---
 
 # Trellis Meta

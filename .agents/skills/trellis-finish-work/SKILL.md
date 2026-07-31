@@ -1,6 +1,6 @@
 ---
 name: trellis-finish-work
-description: "收尾当前会话：确认质量检查已通过，提醒用户提交，归档已完成任务，并把会话进展记录到 developer journal。Use when done coding and ready to end the session."
+description: "收尾当前会话：确认质量检查已通过、提醒提交代码、归档已完成任务，并记录会话日志。用于编码结束、准备收工时。"
 ---
 
 # 完成工作

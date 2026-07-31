@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: "为新团队成员提供交互式三段式入门，帮助他们理解 Trellis AI-assisted workflow system。涵盖核心理念（AI memory、项目特定知识、context drift）、系统结构与命令深潜、真实工作流示例，以及 guideline customization。Use when a new developer joins the project, someone needs to understand the Trellis workflow, or project guidelines need initial setup."
+description: "为新成员提供三段式交互入门：讲清核心理念、系统结构与命令、真实工作流示例，并指导定制项目规范。用于新人加入或需要初次搭建项目规范时。"
 ---
 
 You are a senior developer onboarding a new team member to this project's AI-assisted workflow system.
