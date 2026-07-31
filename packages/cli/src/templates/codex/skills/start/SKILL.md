@@ -1,6 +1,6 @@
 ---
 name: start
-description: "通过读取 workflow 指南、developer 身份、git 状态、active tasks 和 .trellis/ 中的项目规范来初始化 AI 开发会话。对当前请求进行分类，并路由到 brainstorm、直接编辑或任务工作流。Use when beginning a new coding session, resuming work, starting a new task, or re-establishing project context."
+description: "读取工作流指南、开发者身份、Git 状态与项目规范，初始化开发会话并判定任务走向。用于开启新会话、恢复工作或重建项目上下文时。"
 ---
 
 # 开始会话

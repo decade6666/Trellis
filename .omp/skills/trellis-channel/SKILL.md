@@ -1,6 +1,6 @@
 ---
 name: trellis-channel
-description: "使用 Trellis channel 进行实时 multi-agent 协作、派生 workers、跨 agent 评审、进度检查、forum channels 和 channel 日志调试。"
+description: "使用 Trellis 协作通道进行多代理实时协作：派生工作进程、跨代理评审、查看进度、论坛式通道与通道日志排查。"
 ---
 
 # trellis-channel

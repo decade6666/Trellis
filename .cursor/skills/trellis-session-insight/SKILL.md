@@ -1,6 +1,6 @@
 ---
 name: trellis-session-insight
-description: "通过 `trellis mem` CLI 访问过去的 AI 对话历史。Use whenever the user asks 'how did we solve X last time', 'have we discussed this before', 'what was the decision on X', 'remind me what we did in this task', '上次怎么解的', '之前讨论过吗', '想起一段对话', or when starting a brainstorm that overlaps prior work, debugging a familiar bug, continuing a task across sessions, or doing a finish-work review. 返回原始历史对话；根据当前场景决定是更新 spec、追加到 task notes、在回复中引用，还是仅内部吸收。"
+description: "通过 trellis mem 查询过去的 AI 对话历史。用于回想上次是怎么解的、之前是否讨论过，以及跨会话继续任务或复盘历史决策时。"
 ---
 
 # Trellis Session Insight

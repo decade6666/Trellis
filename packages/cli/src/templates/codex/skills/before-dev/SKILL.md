@@ -1,6 +1,6 @@
 ---
 name: before-dev
-description: "在实现开始前发现并注入 .trellis/spec/ 中的项目特定编码规范。读取 spec 索引、pre-development checklist 和目标包的共享思考指南。Use when starting a new coding task, before writing any code, switching to a different package, or needing to refresh project conventions and standards."
+description: "动手写代码前，读取 .trellis/spec/ 中的项目规范、开发前检查清单与所属模块指引并注入上下文。用于开始编码、切换模块或重温项目约定时。"
 ---
 
 Read the relevant development guidelines before starting your task.

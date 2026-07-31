@@ -1,6 +1,6 @@
 ---
 name: integrate-skill
-description: "把外部 skill 适配进 .trellis/spec/ 中的项目特定开发规范。创建 guideline sections、带有 .template 后缀的代码示例模板，并更新 spec 索引。Use when integrating an external skill, adding a new skill's patterns to project conventions, or incorporating third-party skill best practices into .trellis/spec/ documentation."
+description: "把外部技能吸收进 .trellis/spec/ 中的项目规范：生成规范条目与示例模板文件，并更新规范索引。用于引入外部技能或吸收第三方最佳实践时。"
 ---
 
 # Integrate Skill into Project Guidelines

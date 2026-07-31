@@ -1,6 +1,6 @@
 ---
 name: brainstorm
-description: "在获得 task-creation consent 后引导 Trellis task 的需求探索。Use when the user is ready to clarify requirements before implementation."
+description: "在获得任务创建许可后，引导澄清该任务的需求。用于用户准备在动手实现前理清需求时。"
 ---
 
 # Trellis Brainstorm
