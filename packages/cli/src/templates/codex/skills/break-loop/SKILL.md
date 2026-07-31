@@ -1,6 +1,6 @@
 ---
 name: break-loop
-description: "Deep post-fix bug analysis across five dimensions: root cause categorization, fix failure analysis, prevention mechanisms, systematic expansion, and knowledge capture. Updates .trellis/spec/ guides with lessons learned to prevent recurring bugs. Use when a debugging session completes, after fixing a tricky bug, when the same class of bug keeps recurring, or when you want to capture debugging insights into project documentation."
+description: "在修复完成后从五个维度进行深度 bug 分析：根因分类、修复失败分析、预防机制、系统化扩展和知识沉淀。会把经验更新到 .trellis/spec/ 指南中，以防同类 bug 再次出现。Use when a debugging session completes, after fixing a tricky bug, when the same class of bug keeps recurring, or when you want to capture debugging insights into project documentation."
 ---
 
 # Break the Loop - Deep Bug Analysis

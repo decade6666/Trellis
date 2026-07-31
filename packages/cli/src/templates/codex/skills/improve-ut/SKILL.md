@@ -1,6 +1,6 @@
 ---
 name: improve-ut
-description: "Analyzes changed files and improves unit test coverage using project-specific testing conventions from .trellis/spec/ unit-test specs. Determines test scope (unit vs integration vs regression), adds or updates tests following existing patterns, and runs validation. Use when code changes need test coverage, after implementing a feature, after fixing a bug, or when test gaps are identified."
+description: "分析变更文件，并依据 .trellis/spec/ 中 unit-test specs 的项目测试约定提升单元测试覆盖率。判断测试范围（unit / integration / regression），按现有模式新增或更新测试，并运行验证。Use when code changes need test coverage, after implementing a feature, after fixing a bug, or when test gaps are identified."
 ---
 
 # 改进单元测试 (UT)

@@ -1,6 +1,6 @@
 ---
 name: trellis-before-dev
-description: "Discovers and injects project-specific coding guidelines from .trellis/spec/ before implementation begins. Reads spec indexes, pre-development checklists, and shared thinking guides for the target package. Use when starting a new coding task, before writing any code, switching to a different package, or needing to refresh project conventions and standards."
+description: "在实现开始前发现并注入 .trellis/spec/ 中的项目特定编码规范。读取 spec 索引、pre-development checklist 和目标包的共享思考指南。Use when starting a new coding task, before writing any code, switching to a different package, or needing to refresh project conventions and standards."
 ---
 
 Read the relevant development guidelines before starting your task.

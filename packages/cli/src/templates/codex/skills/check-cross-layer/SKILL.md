@@ -1,6 +1,6 @@
 ---
 name: check-cross-layer
-description: "Post-implementation verification across multiple code dimensions: cross-layer data flow, code reuse analysis, import path validation, and same-layer consistency checks. Identifies missed update sites, type mismatches, and duplicated constants. Use when changes span 3+ architectural layers, after modifying shared constants or configs, after batch file modifications, or when creating new utility functions."
+description: "在实现后跨多个代码维度进行验证：cross-layer data flow、代码复用分析、import path 校验和同层一致性检查。识别遗漏的更新点、类型不匹配和重复常量。Use when changes span 3+ architectural layers, after modifying shared constants or configs, after batch file modifications, or when creating new utility functions."
 ---
 
 # Cross-Layer Check

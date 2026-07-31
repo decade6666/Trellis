@@ -1,6 +1,6 @@
 ---
 name: trellis-continue
-description: "Resume work on the current task. Loads the workflow Phase Index, figures out which phase/step to pick up at, then pulls the step-level detail via get_context.py --mode phase. Use when coming back to an in-progress task and you need to know what to do next."
+description: "继续当前任务。加载 workflow Phase Index，判断应当从哪个 phase/step 继续，再通过 get_context.py --mode phase 拉取该步骤的详细上下文。Use when coming back to an in-progress task and you need to know what to do next."
 ---
 
 # 继续当前任务
