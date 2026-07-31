@@ -1,0 +1,9 @@
+{
+  "version": "0.6.20",
+  "description": "Localizes every Trellis skill description shown in the `/` slash menu to Chinese across all supported platforms, and stops the release script from sweeping local Claude Code worktrees into the release commit.",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Enhancements:**\n- feat(i18n): localize Trellis skill descriptions — `SKILL_DESCRIPTIONS` (start, continue, finish-work, before-dev, brainstorm, check, break-loop, update-spec), the bundled multi-file skills (trellis-meta, trellis-channel, trellis-session-insight, trellis-spec-bootstrap), and the Codex `.codex/skills/*` templates now ship Chinese `description:` frontmatter on every platform (Claude Code, Cursor, Oh My Pi, Pi, OpenCode, Codex, Gemini, Copilot, ...)\n\n**Fixes:**\n- fix(release): exclude `.claude/worktrees/` from the pre-release `git add -A` sweep, and gitignore it — 0.6.19 accidentally committed local worktree gitlinks (mode 160000), which broke its npm publish job\n\n**Notes:**\n- 0.6.19 was tagged but never published to npm (its publish workflow failed on the worktree gitlinks); 0.6.20 supersedes it and carries both changesets.",
+  "migrations": [],
+  "notes": "Description-only template change: no file renames or deletions. `trellis update` picks up the Chinese descriptions through the normal template diff — unmodified skill files update automatically, locally edited ones go through the usual 3-way merge / conflict path."
+}

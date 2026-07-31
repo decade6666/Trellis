@@ -1,0 +1,9 @@
+{
+  "version": "0.6.21",
+  "description": "Rewrites the Chinese skill descriptions shown in the `/` slash menu into plain, fully translated Chinese — no mixed English fragments, no untranslated jargon, and short enough not to be truncated in the menu.",
+  "breaking": false,
+  "recommendMigrate": false,
+  "changelog": "**Enhancements:**\n- refactor(i18n): rewrite Trellis skill descriptions in plain Chinese — 0.6.20 shipped bilingual text that read awkwardly and got truncated in the `/` panel. All descriptions are now natural Chinese with translated terminology, trimmed to fit the menu, and mirrored across `SKILL_DESCRIPTIONS`, the bundled skills (trellis-meta, trellis-channel, trellis-session-insight, trellis-spec-bootstrap), the Codex `.codex/skills/*` templates, and every in-repo dogfood copy",
+  "migrations": [],
+  "notes": "Description-only template change: no file renames or deletions. `trellis update` picks up the reworded descriptions through the normal template diff — unmodified skill files update automatically, locally edited ones go through the usual 3-way merge / conflict path."
+}
