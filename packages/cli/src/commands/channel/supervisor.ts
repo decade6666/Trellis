@@ -221,7 +221,35 @@ export async function runSupervisor(
     cwd: config.cwd,
     ...(config.sandbox ? { sandbox: config.sandbox } : {}),
   };
-  const args = adapter.buildArgs(view);
+  // Delete the prompt file BEFORE the pid file: a replacement spawn treats
+  // pid-absence as worker availability, so once the pid is gone the new
+  // supervisor may already have written its own system-prompt.md — removing
+  // the prompt first keeps this teardown from deleting the replacement's
+  // file.
+  const removeSystemPromptFile = (): void => {
+    try {
+      fs.unlinkSync(
+        workerFile(
+          channelName,
+          workerName,
+          "system-prompt.md",
+          process.env.TRELLIS_CHANNEL_PROJECT,
+        ),
+      );
+    } catch {
+      // already gone / never created
+    }
+  };
+
+  let args: string[];
+  try {
+    args = adapter.buildArgs(view);
+  } catch (err) {
+    // Early failure: no child was launched, so nothing will ever read the
+    // prompt file — remove it instead of leaking injected context on disk.
+    removeSystemPromptFile();
+    throw err;
+  }
 
   const env: NodeJS.ProcessEnv = {
     ...process.env,
@@ -456,6 +484,20 @@ export async function runSupervisor(
     );
   } catch (err) {
     stdoutDrain.discard();
+    // The durable `spawned` append failed after the child launched; the
+    // normal exit path may not run cleanup, so remove the prompt file here.
+    try {
+      fs.unlinkSync(
+        workerFile(
+          channelName,
+          workerName,
+          "system-prompt.md",
+          process.env.TRELLIS_CHANNEL_PROJECT,
+        ),
+      );
+    } catch {
+      // already gone / never created
+    }
     throw err;
   }
 
@@ -556,13 +598,13 @@ async function cleanup(channelName: string, workerName: string): Promise<void> {
   // `inbox-cursor` is kept so a respawn (same worker name without
   // killing the channel) doesn't replay messages.
   for (const suffix of [
+    // `system-prompt.md` is removed FIRST — before the pid file — so this
+    // teardown can never race a replacement spawn into deleting the new
+    // supervisor's prompt (see removeSystemPromptFile above for rationale).
+    "system-prompt.md",
     "pid",
     "worker-pid",
     "config",
-    // `system-prompt.md` may carry a large injected context; a respawn rewrites
-    // it from config when needed, so it is removed unconditionally (also when
-    // the current run inlined the prompt and would otherwise leave a stale one).
-    "system-prompt.md",
     "spawnlock",
     "shutdown-reason",
     "reservation",

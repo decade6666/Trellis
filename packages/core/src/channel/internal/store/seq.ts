@@ -45,22 +45,32 @@ async function readLastJsonlSeq(jsonlPath: string): Promise<number> {
   }
   if (stat.size === 0) return 0;
 
+  // Scan for the MAX valid seq, not merely the last line's value: a
+  // corrupt journal can hold a later line with a lower seq, and
+  // reconciling to it would re-issue an already-consumed seq (watchers
+  // key their cursor on seq). For a well-formed journal max === last.
   const seqFromBuffer = (buf: Buffer): number | null => {
     const text = buf.toString("utf-8");
     const lines = text.split("\n");
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const line = lines[i].trim();
+    let max: number | null = null;
+    for (const raw of lines) {
+      const line = raw.trim();
       if (!line) continue;
       try {
         const parsed = JSON.parse(line) as { seq?: number };
-        if (typeof parsed.seq === "number" && Number.isFinite(parsed.seq)) {
-          return parsed.seq;
+        if (
+          typeof parsed.seq === "number" &&
+          Number.isFinite(parsed.seq) &&
+          parsed.seq >= 0 &&
+          (max === null || parsed.seq > max)
+        ) {
+          max = parsed.seq;
         }
       } catch {
         continue;
       }
     }
-    return null;
+    return max;
   };
 
   // Tail-read first.
