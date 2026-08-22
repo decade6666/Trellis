@@ -132,16 +132,16 @@
     ".claude/settings.json": "d13cd05659281a287d7f50c7e25eb6a89c2a6597773511bd6885538acced2855",
     ".cursor/skills/trellis-brainstorm/SKILL.md": "3bbfb6506af3c318c6f9b3c280517ce93a02e40e27535de7ff5fc029d3027860",
     ".cursor/hooks.json": "c7a830671610c1d433c97b3cb880e317730862631fbe3fd76d052553c83f49b3",
-    ".opencode/lib/trellis-context.js": "778ffc725b04ba50e950c379ed7a72a3796acbf946addc21837e7f30b60205f1",
-    ".opencode/plugins/inject-subagent-context.js": "01e61f0d189e9539354e223b188e202884adfdaad5672f539af2c7cb6f6e217b",
-    ".opencode/plugins/inject-workflow-state.js": "99e6a1fe1a3597bcaf765bc83f40e48d553b8b0b7fd1216e2491509abea66d96",
-    ".opencode/plugins/session-start.js": "798b22cbe6c7f3e1a532e322891daed4c00de08951dee06858773ca122c254f1",
+    ".opencode/lib/trellis-context.js": "a111059f3a367ceebe609eff80326f4467a644c4f2f63cf4776cde51711b0b85",
+    ".opencode/plugins/inject-subagent-context.js": "314fe65459c82f2735d09f336156eeefd1fa978d34854bd27efea6fd986b66fa",
+    ".opencode/plugins/inject-workflow-state.js": "ce0134dda6ebdd8cc85a41a2ad09f21ff5f9ec6d62a39acffb0493828d8bc640",
+    ".opencode/plugins/session-start.js": "0fa893143da8a08c6dbd7e55bd6a3ed8343b447c3cddd8b5c5506eee216b4ce3",
     ".opencode/commands/trellis/continue.md": "85c439d4f7dda208ecf9ec72a2ff14e6fc6c6c5e06b3552b8bcb2707caa392a0",
     ".codex/hooks.json": "522ba3c488c100027783e52ecff84c0bd799852dd77ad3f1936e86db105f01d6",
     ".pi/settings.json": "b68f37c04a7007d2b52d5a87326e3786edbc903bfa518358830dd85727c13d7c",
     ".codex/hooks/inject-workflow-state.py": "0946e5b5c4c154538c1848c25c7f92a76c8ecc863b9a1c0f4b2e03bee071fcd0",
     ".codex/config.toml": "cd29d64a44b4631593aca8ff4b071f1156f914fc9dfb976450af6f91b735bb57",
-    ".pi/extensions/trellis/index.ts": "b638d979113222ae4005f1c76846ebde1808ce17d2980bb9d202429182480ec2",
+    ".pi/extensions/trellis/index.ts": "f086c24c8601f240cbf22cef0845ede016522bcf74f11aa65e4a7952e238c1c6",
     ".claude/skills/trellis-channel/references/command-reference.md": "c4df3d940d89814310bfdaded20e84dd1d6b96786f6772688de7a123338d3c8e",
     ".claude/skills/trellis-channel/references/forum.md": "407db39e8ebde47cea8637e3069bdb3d76ba42b43ed1d08ba97a56f26dbcfcb4",
     ".claude/skills/trellis-channel/references/progress-debugging.md": "deb6a0a83537b3c148606ba88fc7aa2dd4ed000342d75e6a7a59a444693e6c34",
@@ -254,6 +254,6 @@
     ".omp/skills/trellis-meta/references/platform-files/skills-and-commands.md": "41f0d7204269fe7653b6b1ca30a1d57b4f67525610f8b2a9df3e890f991912e9",
     ".omp/skills/trellis-meta/SKILL.md": "a3ecf2f83f71337cf43220561b4dc2e6836645b3508c6f76e0db59753c4e0c83",
     ".omp/skills/trellis-spec-bootstrap/SKILL.md": "97bfa68c06cebb558eb4464bc1b81f7d2d56040d75baa8de1ee5ad90cca0196a",
-    ".omp/extensions/trellis/index.ts": "94ed3ae79346e9b514c8bacad45ab0e3caf9f2539591d9347505d9097dea0906"
+    ".omp/extensions/trellis/index.ts": "bc16098ab2e0612f043640d917adf9b14049d06838ecbe1741584e87db4277a9"
   }
 }
