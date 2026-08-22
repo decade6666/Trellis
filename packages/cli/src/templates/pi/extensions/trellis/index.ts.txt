@@ -1,8 +1,15 @@
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
-import { isUtf8 } from "node:buffer";
-import { delimiter, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import {
+  delimiter,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from "node:path";
 import { spawn, spawnSync } from "node:child_process";
+import { isUtf8 } from "node:buffer";
 
 // ── Types ──────────────────────────────────────────────────────────────
 type JsonObject = Record<string, unknown>;
@@ -13,6 +20,10 @@ interface PiToolResult {
 }
 interface PiExtensionContext {
   hasUI?: boolean;
+  model?: {
+    provider?: string;
+    id?: string;
+  };
   sessionManager?: {
     getSessionId?: () => string;
     getSessionFile?: () => string | undefined;
@@ -286,7 +297,7 @@ function summaryText(text: string) {
   return `${text.trim().replace(/[。.!?…]+$/u, "")}...`;
 }
 function splitModelThinking(model?: string, fallbackThinking?: string) {
-  const m = model?.match(/^(.*):(off|minimal|low|medium|high|xhigh)$/i);
+  const m = model?.match(/^(.*):(off|minimal|low|medium|high|xhigh|max)$/i);
   return {
     model: m ? m[1] : model,
     thinking: (m?.[2] ?? fallbackThinking)?.toLowerCase(),
@@ -421,10 +432,13 @@ function exists(p: string) {
 function shellQuote(v: string) {
   return `'${v.replace(/'/g, `'\\''`)}'`;
 }
-function callStr(cb: (() => string | undefined) | undefined): string | null {
+function callStr(
+  cb: (() => string | undefined) | undefined,
+  receiver?: unknown,
+): string | null {
   if (!cb) return null;
   try {
-    return str(cb());
+    return str(cb.call(receiver));
   } catch {
     return null;
   }
@@ -647,16 +661,17 @@ function resolveRunCfg(
   input: SubagentInput,
   agentCfg: AgentConfig,
   inheritedThinking?: string,
+  inheritedModel?: string,
 ): PiRunConfig {
-  const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh"];
+  const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
   const normalize = (v: unknown): string | undefined => {
     const s = typeof v === "string" && v.trim() ? v.trim().toLowerCase() : "";
     return THINKING_LEVELS.includes(s) ? s : undefined;
   };
-  const suffixRe = /:(off|minimal|low|medium|high|xhigh)$/i;
+  const suffixRe = /:(off|minimal|low|medium|high|xhigh|max)$/i;
   const inputModel = str(input.model);
   const agentModel = agentCfg.model;
-  const rawModel = inputModel ?? agentModel;
+  const rawModel = inputModel ?? agentModel ?? str(inheritedModel);
   const inputSuffixThinking = normalize(inputModel?.match(suffixRe)?.[1]);
   const agentSuffixThinking = normalize(agentModel?.match(suffixRe)?.[1]);
   const baseModel = rawModel?.replace(suffixRe, "");
@@ -669,6 +684,12 @@ function resolveRunCfg(
   if (baseModel && thinking && thinking !== "off")
     return { model: `${baseModel}:${thinking}`, thinking, tools: agentCfg.tools };
   return { model: baseModel || rawModel, thinking, tools: agentCfg.tools };
+}
+
+function contextModelRef(ctx?: PiExtensionContext): string | undefined {
+  const provider = str(ctx?.model?.provider);
+  const modelId = str(ctx?.model?.id);
+  return provider && modelId ? `${provider}/${modelId}` : undefined;
 }
 
 function buildPiArgs(cfg: PiRunConfig): string[] {
@@ -721,222 +742,6 @@ class BBC {
     const body = Buffer.concat(this.c, this.len).toString("utf-8");
     return this.trunc ? `[${this.trunc} bytes truncated]\n${body}` : body;
   }
-}
-
-// ── Trellis Context ────────────────────────────────────────────────────
-function findRoot(start: string): string {
-  let c = resolve(start);
-  while (true) {
-    if (existsSync(join(c, ".trellis")) || existsSync(join(c, ".pi"))) return c;
-    const p = dirname(c);
-    if (p === c) return resolve(start);
-    c = p;
-  }
-}
-function splitFM(c: string) {
-  const m = c.replace(/^\uFEFF/, "").match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
-  return m
-    ? { fm: m[1] ?? "", body: c.slice(m[0].length) }
-    : { fm: "", body: c };
-}
-function stripFM(c: string) {
-  return splitFM(c).body.trimStart();
-}
-function parseAgentFM(c: string): AgentConfig {
-  const cfg: AgentConfig = { fallbackModels: [] };
-  const { fm } = splitFM(c);
-  const lines = fm.split(/\r?\n/);
-  for (let i = 0; i < lines.length; i++) {
-    const m = (lines[i] ?? "").match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
-    if (!m) continue;
-    const k = m[1] ?? "",
-      v = m[2] ?? "";
-    if (k === "model")
-      cfg.model = v.trim().replace(/^["']|["']$/g, "") || undefined;
-    else if (k === "thinking")
-      cfg.thinking = (v.trim().replace(/^["']|["']$/g, "") || undefined) as
-        | string
-        | undefined;
-    else if (k === "fallbackModels" || k === "fallback_models") {
-      if (v.trim()) {
-        cfg.fallbackModels = v
-          .trim()
-          .replace(/^\[|\]$/g, "")
-          .split(",")
-          .map((s) => s.trim().replace(/^["']|["']$/g, ""))
-          .filter(Boolean);
-      } else {
-        i++;
-        while (i < lines.length && /^\s+-\s/.test(lines[i] ?? "")) {
-          const item = (lines[i] ?? "")
-            .trim()
-            .replace(/^-\s+/, "")
-            .replace(/^["']|["']$/g, "");
-          if (item) cfg.fallbackModels.push(item);
-          i++;
-        }
-        i--;
-      }
-    } else if (k === "tools") {
-      // Pi tool names are lowercase (read, bash, edit, write, grep, find, ls).
-      // Normalize to lowercase so mixed-case frontmatter still matches.
-      if (v.trim()) {
-        cfg.tools = v
-          .trim()
-          .split(",")
-          .map((s) => s.trim().replace(/^["']|["']$/g, "").toLowerCase())
-          .filter(Boolean);
-      }
-    }
-  }
-  return cfg;
-}
-
-function contextKey(input?: unknown, ctx?: PiExtensionContext): string | null {
-  const ov = str(process.env.TRELLIS_CONTEXT_ID);
-  if (ov) return ov.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 160) || hash(ov);
-  const sessionId =
-    callStr(ctx?.sessionManager?.getSessionId) ??
-    str(process.env.PI_SESSION_ID) ??
-    str(process.env.PI_SESSIONID) ??
-    lookupStr(input, ["session_id", "sessionId", "sessionID"]);
-  if (sessionId)
-    return `pi_${sessionId.replace(/[^A-Za-z0-9._-]+/g, "_") || hash(sessionId)}`;
-  const transcriptPath =
-    callStr(ctx?.sessionManager?.getSessionFile) ??
-    lookupStr(input, ["transcript_path", "transcriptPath", "transcript"]);
-  if (transcriptPath) return `pi_transcript_${hash(transcriptPath)}`;
-  return null;
-}
-
-function readTaskDir(root: string, key: string | null): string | null {
-  if (!key) return null;
-  try {
-    const ctx = JSON.parse(
-      readText(join(root, ".trellis", ".runtime", "sessions", `${key}.json`)),
-    ) as JsonObject;
-    let ref = str(ctx.current_task);
-    if (!ref) return null;
-    ref = ref;
-    ref = ref.replace(/\\/g, "/").replace(/^\.\//, "");
-    if (ref.startsWith("tasks/")) ref = `.trellis/${ref}`;
-    return ref.startsWith(".trellis/")
-      ? join(root, ref)
-      : isAbsolute(ref)
-        ? ref
-        : join(root, ".trellis", "tasks", ref);
-  } catch {
-    return null;
-  }
-}
-function sessionHasTask(root: string, key: string): boolean {
-  try {
-    const ctx = JSON.parse(
-      readText(join(root, ".trellis", ".runtime", "sessions", `${key}.json`)),
-    ) as JsonObject;
-    return !!str(ctx.current_task);
-  } catch {
-    return false;
-  }
-}
-function adoptKey(root: string, key: string): string {
-  if (sessionHasTask(root, key)) return key;
-  try {
-    const dir = join(root, ".trellis", ".runtime", "sessions");
-    const keys = readdirSync(dir)
-      .filter(
-        (f) => f.endsWith(".json") && sessionHasTask(root, f.slice(0, -5)),
-      )
-      .map((f) => f.slice(0, -5));
-    const proc = keys.filter((k) => k.startsWith("pi_process_"));
-    const cands = proc.length ? proc : keys;
-    return cands.length === 1 ? cands[0]! : key;
-  } catch {
-    return key;
-  }
-}
-
-// ── Workflow State Breadcrumb ─────────────────────────────────────────
-const WF_RE =
-  /\[workflow-state:([A-Za-z0-9_-]+)\]\s*\n([\s\S]*?)\n\s*\[\/workflow-state:\1\]/g;
-function workflowBreadcrumb(root: string, key: string | null): string {
-  const wf = readText(join(root, ".trellis", "workflow.md"));
-  if (!wf) return "";
-  const templates: Record<string, string> = {};
-  for (const m of wf.matchAll(WF_RE)) {
-    const s = m[1] ?? "",
-      b = (m[2] ?? "").trim();
-    if (s && b) templates[s] = b;
-  }
-  const dir = readTaskDir(root, key);
-  let header = "Status: no_task",
-    lookup = "no_task";
-  if (dir) {
-    try {
-      const d = JSON.parse(readText(join(dir, "task.json"))) as JsonObject;
-      const status = str(d.status) ?? "";
-      const id = str(d.id) ?? dir.split(/[\\/]/).pop() ?? "";
-      if (status) {
-        header = `Task: ${id} (${status})`;
-        lookup = status;
-      }
-    } catch {}
-  }
-  const body = templates[lookup] ?? "Refer to workflow.md for current step.";
-  return `<workflow-state>\n${header}\n${body}\n</workflow-state>`;
-}
-
-// ── Session Overview ───────────────────────────────────────────────────
-function runContextScript(root: string, key: string | null, args: string[]): string {
-  const script = join(root, ".trellis", "scripts", "get_context.py");
-  if (!exists(script)) return "";
-  try {
-    const py = process.platform === "win32" ? "python" : "python3";
-    const result = spawnSync(py, [script, ...args], {
-      cwd: root,
-      env: key ? { ...process.env, TRELLIS_CONTEXT_ID: key } : process.env,
-      encoding: "utf-8",
-      timeout: SESSION_OVERVIEW_TIMEOUT_MS,
-      windowsHide: true,
-    });
-    if (result.status !== 0) return "";
-    const stdout = (result.stdout ?? "").trim();
-    return stdout;
-  } catch {
-    return "";
-  }
-}
-
-function sessionOverview(root: string, key: string | null): string {
-  const stdout = runContextScript(root, key, []);
-  return stdout ? `<session-overview>\n${stdout}\n</session-overview>` : "";
-}
-
-function workflowOverview(root: string, key: string | null): string {
-  const stdout = runContextScript(root, key, [
-    "--mode",
-    "phase",
-    "--platform",
-    "pi",
-  ]);
-  return stdout ? `<trellis-workflow>\n${stdout}\n</trellis-workflow>` : "";
-}
-
-function buildStartupContext(
-  root: string,
-  key: string | null,
-  overview: string,
-): string {
-  const workflow = workflowOverview(root, key);
-  return [
-    "<session-context>\nTrellis compact SessionStart context. Use it to orient the session; load details on demand.\n</session-context>",
-    FIRST_REPLY_NOTICE,
-    overview,
-    workflow,
-    "<ready>\nUse the current workflow state to decide whether to create, continue, or skip a Trellis task.\n</ready>",
-  ]
-    .filter(Boolean)
-    .join("\n\n");
 }
 
 // ── Context Injection Limits (issue #441) ───────────────────────────────
@@ -1153,6 +958,220 @@ function readJsonlEntries(basePath: string, jsonlPath: string): JsonlEntry[] {
     } catch {}
   }
   return entries;
+}
+
+// ── Trellis Context ────────────────────────────────────────────────────
+function findRoot(start: string): string {
+  let c = resolve(start);
+  while (true) {
+    if (existsSync(join(c, ".trellis")) || existsSync(join(c, ".pi"))) return c;
+    const p = dirname(c);
+    if (p === c) return resolve(start);
+    c = p;
+  }
+}
+function splitFM(c: string) {
+  const m = c.replace(/^\uFEFF/, "").match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  return m
+    ? { fm: m[1] ?? "", body: c.slice(m[0].length) }
+    : { fm: "", body: c };
+}
+function stripFM(c: string) {
+  return splitFM(c).body.trimStart();
+}
+function parseAgentFM(c: string): AgentConfig {
+  const cfg: AgentConfig = { fallbackModels: [] };
+  const { fm } = splitFM(c);
+  const lines = fm.split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const m = (lines[i] ?? "").match(/^([A-Za-z][A-Za-z0-9_-]*)\s*:\s*(.*)$/);
+    if (!m) continue;
+    const k = m[1] ?? "",
+      v = m[2] ?? "";
+    if (k === "model")
+      cfg.model = v.trim().replace(/^["']|["']$/g, "") || undefined;
+    else if (k === "thinking")
+      cfg.thinking = (v.trim().replace(/^["']|["']$/g, "") || undefined) as
+        | string
+        | undefined;
+    else if (k === "fallbackModels" || k === "fallback_models") {
+      if (v.trim()) {
+        cfg.fallbackModels = v
+          .trim()
+          .replace(/^\[|\]$/g, "")
+          .split(",")
+          .map((s) => s.trim().replace(/^["']|["']$/g, ""))
+          .filter(Boolean);
+      } else {
+        i++;
+        while (i < lines.length && /^\s+-\s/.test(lines[i] ?? "")) {
+          const item = (lines[i] ?? "")
+            .trim()
+            .replace(/^-\s+/, "")
+            .replace(/^["']|["']$/g, "");
+          if (item) cfg.fallbackModels.push(item);
+          i++;
+        }
+        i--;
+      }
+    } else if (k === "tools") {
+      // Pi tool names are lowercase (read, bash, edit, write, grep, find, ls).
+      // Normalize to lowercase so mixed-case frontmatter still matches.
+      if (v.trim()) {
+        cfg.tools = v
+          .trim()
+          .split(",")
+          .map((s) => s.trim().replace(/^["']|["']$/g, "").toLowerCase())
+          .filter(Boolean);
+      }
+    }
+  }
+  return cfg;
+}
+
+function contextKey(input?: unknown, ctx?: PiExtensionContext): string | null {
+  const sessionId =
+    callStr(ctx?.sessionManager?.getSessionId, ctx?.sessionManager) ??
+    str(process.env.PI_SESSION_ID) ??
+    str(process.env.PI_SESSIONID) ??
+    lookupStr(input, ["session_id", "sessionId", "sessionID"]);
+  if (sessionId) {
+    const normalized = sessionId.replace(/[^A-Za-z0-9._-]+/g, "_");
+    if (!normalized) return `pi_${hash(sessionId)}`;
+    return `pi_${normalized}${normalized === sessionId ? "" : `_${hash(sessionId)}`}`;
+  }
+  const transcriptPath =
+    callStr(ctx?.sessionManager?.getSessionFile, ctx?.sessionManager) ??
+    lookupStr(input, ["transcript_path", "transcriptPath", "transcript"]);
+  if (transcriptPath) return `pi_transcript_${hash(transcriptPath)}`;
+  return null;
+}
+
+/**
+ * Return `candidate` when it lands inside `root`, else null.
+ *
+ * A session pointer is not always something the user typed. `task.py` now
+ * refuses to store a ref that leaves the project, but a session file written
+ * before that fix can still hold one, and `trellis update` does not rewrite
+ * session files — so a poisoned pointer outlives the upgrade that closed the
+ * writer. Both sides are resolved so a task directory symlinked outside is
+ * refused too, but the original `candidate` is returned on success: callers do
+ * `relative(root, dir)`, and handing them a realpath would break that whenever
+ * `root` itself sits behind a symlink (`/tmp` does on macOS).
+ */
+function containInRoot(root: string, candidate: string): string | null {
+  try {
+    const rel = relative(realpathSync(root), realpathSync(candidate));
+    if (rel !== "" && (rel.startsWith("..") || isAbsolute(rel))) return null;
+    return candidate;
+  } catch {
+    return null;
+  }
+}
+
+function readTaskDir(root: string, key: string | null): string | null {
+  if (!key) return null;
+  try {
+    const ctx = JSON.parse(
+      readText(join(root, ".trellis", ".runtime", "sessions", `${key}.json`)),
+    ) as JsonObject;
+    let ref = str(ctx.current_task);
+    if (!ref) return null;
+    ref = ref;
+    ref = ref.replace(/\\/g, "/").replace(/^\.\//, "");
+    if (ref.startsWith("tasks/")) ref = `.trellis/${ref}`;
+    const candidate = ref.startsWith(".trellis/")
+      ? join(root, ref)
+      : isAbsolute(ref)
+        ? ref
+        : join(root, ".trellis", "tasks", ref);
+    return containInRoot(root, candidate);
+  } catch {
+    return null;
+  }
+}
+
+// ── Workflow State Breadcrumb ─────────────────────────────────────────
+const WF_RE =
+  /\[workflow-state:([A-Za-z0-9_-]+)\]\s*\n([\s\S]*?)\n\s*\[\/workflow-state:\1\]/g;
+function workflowBreadcrumb(root: string, key: string | null): string {
+  const wf = readText(join(root, ".trellis", "workflow.md"));
+  if (!wf) return "";
+  const templates: Record<string, string> = {};
+  for (const m of wf.matchAll(WF_RE)) {
+    const s = m[1] ?? "",
+      b = (m[2] ?? "").trim();
+    if (s && b) templates[s] = b;
+  }
+  const dir = readTaskDir(root, key);
+  let header = "Status: no_task",
+    lookup = "no_task";
+  if (dir) {
+    try {
+      const d = JSON.parse(readText(join(dir, "task.json"))) as JsonObject;
+      const status = str(d.status) ?? "";
+      const id = str(d.id) ?? dir.split(/[\\/]/).pop() ?? "";
+      if (status) {
+        header = `Task: ${id} (${status})`;
+        lookup = status;
+      }
+    } catch {}
+  }
+  const body = templates[lookup] ?? "Refer to workflow.md for current step.";
+  return `<workflow-state>\n${header}\n${body}\n</workflow-state>`;
+}
+
+// ── Session Overview ───────────────────────────────────────────────────
+function runContextScript(root: string, key: string | null, args: string[]): string {
+  const script = join(root, ".trellis", "scripts", "get_context.py");
+  if (!exists(script)) return "";
+  try {
+    const py = process.platform === "win32" ? "python" : "python3";
+    const result = spawnSync(py, [script, ...args], {
+      cwd: root,
+      env: key ? { ...process.env, TRELLIS_CONTEXT_ID: key } : process.env,
+      encoding: "utf-8",
+      timeout: SESSION_OVERVIEW_TIMEOUT_MS,
+      windowsHide: true,
+    });
+    if (result.status !== 0) return "";
+    const stdout = (result.stdout ?? "").trim();
+    return stdout;
+  } catch {
+    return "";
+  }
+}
+
+function sessionOverview(root: string, key: string | null): string {
+  const stdout = runContextScript(root, key, []);
+  return stdout ? `<session-overview>\n${stdout}\n</session-overview>` : "";
+}
+
+function workflowOverview(root: string, key: string | null): string {
+  const stdout = runContextScript(root, key, [
+    "--mode",
+    "phase",
+    "--platform",
+    "pi",
+  ]);
+  return stdout ? `<trellis-workflow>\n${stdout}\n</trellis-workflow>` : "";
+}
+
+function buildStartupContext(
+  root: string,
+  key: string | null,
+  overview: string,
+): string {
+  const workflow = workflowOverview(root, key);
+  return [
+    "<session-context>\nTrellis compact SessionStart context. Use it to orient the session; load details on demand.\n</session-context>",
+    FIRST_REPLY_NOTICE,
+    overview,
+    workflow,
+    "<ready>\nUse the current workflow state to decide whether to create, continue, or skip a Trellis task.\n</ready>",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
 }
 
 function buildContext(root: string, agent: string, key: string | null): string {
@@ -1495,11 +1514,17 @@ async function runSubagent(
   signal?: AbortSignal,
   onUpdate?: (r: PiToolResult) => void,
   inheritedThinking?: string,
+  inheritedModel?: string,
 ): Promise<{ output: string; details: ProgressDetails; failed: boolean }> {
   const agentName = normalizeAgent(input.agent);
   const agentRaw = readText(join(root, ".pi", "agents", `${agentName}.md`));
   const agentCfg = parseAgentFM(agentRaw);
-  const runCfg = resolveRunCfg(input, agentCfg, inheritedThinking);
+  const runCfg = resolveRunCfg(
+    input,
+    agentCfg,
+    inheritedThinking,
+    inheritedModel,
+  );
   const mode = input.mode ?? "single";
   const startedAt = Date.now();
   const details: ProgressDetails = {
@@ -1645,7 +1670,7 @@ export default function trellisExtension(pi: {
   let curKey: string | null = null;
 
   const getKey = (input?: unknown, ctx?: PiExtensionContext) => {
-    const k = adoptKey(root, contextKey(input, ctx) ?? curKey ?? procKey);
+    const k = contextKey(input, ctx) ?? curKey ?? procKey;
     curKey = k;
     return k;
   };
@@ -1744,7 +1769,7 @@ export default function trellisExtension(pi: {
           type: "string",
           description:
             "Optional Pi thinking level override for the child sub-agent process.",
-          enum: ["off", "minimal", "low", "medium", "high", "xhigh"],
+          enum: ["off", "minimal", "low", "medium", "high", "xhigh", "max"],
         },
       },
     },
@@ -1804,6 +1829,7 @@ export default function trellisExtension(pi: {
       };
       const key = getKey(cleanInput, ctx);
       const inheritedThinking = pi.getThinkingLevel?.();
+      const inheritedModel = contextModelRef(ctx);
       const result = await runSubagent(
         root,
         cleanInput,
@@ -1811,6 +1837,7 @@ export default function trellisExtension(pi: {
         signal,
         onUpdate,
         inheritedThinking,
+        inheritedModel,
       );
       return {
         content: [{ type: "text", text: result.output }],

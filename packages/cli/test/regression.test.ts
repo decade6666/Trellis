@@ -719,6 +719,7 @@ describe("regression: update only configured platforms (beta.16)", () => {
     expect(result.has(".opencode/plugins/inject-workflow-state.js")).toBe(true);
     // Plus agents, lib, package.json, at least one command, at least one skill
     expect(result.has(".opencode/agents/trellis-implement.md")).toBe(true);
+    expect(result.has(".opencode/lib/context-visibility.js")).toBe(true);
     expect(result.has(".opencode/lib/trellis-context.js")).toBe(true);
     expect(result.has(".opencode/package.json")).toBe(true);
   });
@@ -3392,60 +3393,32 @@ describe("regression: current-task path normalization", () => {
     expect(active.stale).toBe(false);
   });
 
-  it("[session-current-task] OpenCode resolver prefers OPENCODE_RUN_ID over plugin sessionID", () => {
+  it("[session-current-task] task.py start ignores OPENCODE_RUN_ID and enters degraded mode", () => {
+    // Inverted from "uses OPENCODE_RUN_ID" upstream on 2026-08-05. All three
+    // declared OpenCode names (OPENCODE_SESSION_ID / OPENCODE_SESSIONID /
+    // OPENCODE_RUN_ID) are absent from OpenCode's source and shipped binary;
+    // the OpenCode plugin is what actually carries identity, by prefixing the
+    // bash command with `export TRELLIS_CONTEXT_ID=…`. So the env-table entry
+    // only ever pretended to work, and OpenCode now degrades honestly.
     setupTaskRepo();
-    writeProjectFile(
-      path.join(".trellis", "tasks", "opencode-run-task", "task.json"),
-      JSON.stringify(
-        {
-          title: "OpenCode run task",
-          status: "in_progress",
-          priority: "P1",
-        },
-        null,
-        2,
-      ),
-    );
-    writeProjectFile(
-      path.join(".trellis", ".runtime", "sessions", "opencode_run-a.json"),
-      JSON.stringify(
-        {
-          current_task: ".trellis/tasks/opencode-run-task",
-          platform: "opencode",
-        },
-        null,
-        2,
-      ),
-    );
-    writeProjectFile(
-      path.join(".trellis", ".runtime", "sessions", "opencode_oc-a.json"),
-      JSON.stringify(
-        {
-          current_task: ".trellis/tasks/issue-106",
-          platform: "opencode",
-        },
-        null,
-        2,
-      ),
+    const taskScriptPath = path.join(tmpDir, ".trellis", "scripts", "task.py");
+
+    const output = execSync(
+      `${pythonCmd} ${JSON.stringify(taskScriptPath)} start ${JSON.stringify(".trellis/tasks/issue-106")}`,
+      {
+        cwd: tmpDir,
+        encoding: "utf-8",
+        env: sessionEnv({ OPENCODE_RUN_ID: "run-a" }),
+      },
     );
 
-    const previous = process.env.OPENCODE_RUN_ID;
-    process.env.OPENCODE_RUN_ID = "run-a";
-    try {
-      const active = new TrellisContext(tmpDir).getActiveTask({
-        sessionID: "oc-a",
-      });
-
-      expect(active.source).toBe("session:opencode_run-a");
-      expect(active.taskPath).toBe(".trellis/tasks/opencode-run-task");
-      expect(active.stale).toBe(false);
-    } finally {
-      if (previous === undefined) {
-        delete process.env.OPENCODE_RUN_ID;
-      } else {
-        process.env.OPENCODE_RUN_ID = previous;
-      }
-    }
+    expect(output).toContain("Session identity not available");
+    expect(output).toContain("degraded");
+    expect(output).not.toContain("session:opencode_run-a");
+    const sessionsDir = path.join(tmpDir, ".trellis", ".runtime", "sessions");
+    expect(fs.existsSync(path.join(sessionsDir, "opencode_run-a.json"))).toBe(
+      false,
+    );
   });
 
   it("[#412] shared and Codex contexts include an adaptive one-shot notice without changing payload shape", () => {

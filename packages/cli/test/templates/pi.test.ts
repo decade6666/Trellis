@@ -200,7 +200,7 @@ describe("pi templates", () => {
       'enum: ["single", "parallel", "chain"]',
     );
     expect(extension).toContain(
-      'enum: ["off", "minimal", "low", "medium", "high", "xhigh"]',
+      'enum: ["off", "minimal", "low", "medium", "high", "xhigh", "max"]',
     );
 
     // Dispatch protocol carries the "Active task: <path>" prefix rule.
