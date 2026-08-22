@@ -1,5 +1,5 @@
 ---
-description: Resume work on the current task at the correct phase.
+description: "在正确的阶段继续当前任务。"
 ---
 
 Resume work on the current task — pick up at the right phase/step in `.trellis/workflow.md`.

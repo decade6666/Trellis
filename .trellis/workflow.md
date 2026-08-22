@@ -103,8 +103,22 @@ calling it yourself.
 
 **Path.** After `npm install -g @decade666/trellis`, `codeagent-wrapper` is on
 `PATH` (npm `bin` symlink). The script also still lives in the package as
-`bin/codeagent-wrapper.mjs` next to the `trellis` executable. Do not search
-`~/.claude/bin`, `~/.local/bin`, or `/tmp/trellis-wrapper-*` stubs.
+`bin/codeagent-wrapper.mjs` next to the `trellis` executable.
+
+When that global install is safe (npm global + postinstall, not
+`--ignore-scripts`), Trellis may also create a Claude/CCG compatibility link:
+
+```text
+~/.claude/bin/codeagent-wrapper → <current package>/bin/codeagent-wrapper.mjs
+```
+
+External Claude/CCG tools can call that absolute path. **Trellis runtime still
+resolves only bundled wrapper → PATH** and does **not** search
+`~/.claude/bin`, `~/.local/bin`, or `/tmp/trellis-wrapper-*` stubs. Existing
+files, directories, and custom/live links at the home path are preserved.
+Limits: npm global only; Windows, platforms without a safe directory-fd path
+(such as `/proc/self/fd`), non-effective-uid or group/other-writable HOME, and
+suppressed lifecycle output may leave the link absent; no uninstall auto-cleanup. Verify with `readlink ~/.claude/bin/codeagent-wrapper`.
 
 Override with `TRELLIS_CODEAGENT_WRAPPER=/abs/path/codeagent-wrapper.mjs` when you
 must point at a different build.
