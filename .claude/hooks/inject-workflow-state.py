@@ -24,9 +24,12 @@ custom agent's ``hooks.userPromptSubmit`` and the IDE ``.kiro.hook``
 (Kiro adds hook stdout directly to the conversation context). Written to
 each platform's hooks directory via writeSharedHooks() at init time.
 
-Silent exit 0 cases (no output):
+Silent exit 0 case (no output):
   - No .trellis/ directory found (not a Trellis project)
-  - task.json malformed or missing status
+
+When a session points at a task directory whose task.json is missing, malformed,
+or missing a usable status, the hook emits a task_error breadcrumb instead of
+misreporting the session as having no active task.
 """
 from __future__ import annotations
 
@@ -95,8 +98,14 @@ def find_trellis_root(start: Path) -> Optional[Path]:
 def _detect_platform(input_data: dict) -> str | None:
     if isinstance(input_data.get("cursor_version"), str):
         return "cursor"
+    # CLAUDE_PROJECT_DIR is a compatibility alias that several hosts set
+    # alongside their own variable — CodeBuddy, ZCode and Trae all do. It must
+    # therefore be checked LAST, or every one of them is detected as claude and
+    # the context key becomes `claude_<their-session-id>`. That key does not
+    # match the session file `task.py start` wrote under the host's real name,
+    # so every turn reports no_task while the pointer exists on disk.
     env_map = {
-        "CLAUDE_PROJECT_DIR": "claude",
+        "ZCODE_PROJECT_DIR": "zcode",
         "CURSOR_PROJECT_DIR": "cursor",
         "CODEBUDDY_PROJECT_DIR": "codebuddy",
         "FACTORY_PROJECT_DIR": "droid",
@@ -105,6 +114,8 @@ def _detect_platform(input_data: dict) -> str | None:
         "KIRO_PROJECT_DIR": "kiro",
         "COPILOT_PROJECT_DIR": "copilot",
         "TRAE_PROJECT_DIR": "trae",
+        # Last: the shared alias, only meaningful once no vendor key matched.
+        "CLAUDE_PROJECT_DIR": "claude",
     }
     for env_name, platform in env_map.items():
         if os.environ.get(env_name):
@@ -140,8 +151,16 @@ def _resolve_active_task(root: Path, input_data: dict):
     return resolve_active_task(root, input_data, platform=_detect_platform(input_data))
 
 
-def get_active_task(root: Path, input_data: dict) -> Optional[tuple[str, str, str]]:
-    """Return (task_id, status, source) from the current active task."""
+def get_active_task(
+    root: Path, input_data: dict
+) -> tuple[str, str, str] | None:
+    """Return active task data, a task-record error, or no task pointer.
+
+    ``(task_id, "task_error", source)`` is distinct from ``None``: a session
+    pointer can exist even when its task record is missing or unreadable, and
+    that state needs a diagnostic breadcrumb rather than the normal ``no_task``
+    prompt.
+    """
     active = _resolve_active_task(root, input_data)
     if not active.task_path:
         return None
@@ -154,16 +173,18 @@ def get_active_task(root: Path, input_data: dict) -> Optional[tuple[str, str, st
 
     task_json = task_dir / "task.json"
     if not task_json.is_file():
-        return None
+        return task_dir.name, "task_error", active.source
     try:
         data = json.loads(task_json.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
-        return None
+        return task_dir.name, "task_error", active.source
+    if not isinstance(data, dict):
+        return task_dir.name, "task_error", active.source
 
     task_id = data.get("id") or task_dir.name
     status = data.get("status", "")
     if not isinstance(status, str) or not status:
-        return None
+        return task_dir.name, "task_error", active.source
     return task_id, status, active.source
 
 
