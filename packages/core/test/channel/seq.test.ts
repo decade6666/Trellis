@@ -111,6 +111,66 @@ describe("appendEvent + .seq sidecar", () => {
     expect(fs.readFileSync(sidecar, "utf-8").trim()).toBe("3");
   });
 
+  it("continues seq after a torn JSONL tail", async () => {
+    await createChannel({ channel: "torn", by: "main" });
+    await sendMessage({ channel: "torn", by: "main", text: "one" });
+    const file = eventsPath(
+      "torn",
+      process.env.TRELLIS_CHANNEL_PROJECT ?? "",
+    );
+    const prefix = fs.readFileSync(file);
+    fs.appendFileSync(file, '{"seq":99,"kind":"progress","by":"w","text":"cut');
+    await sendMessage({ channel: "torn", by: "main", text: "two" });
+    const events = await readChannelEvents({ channel: "torn" });
+    expect(events.map((e) => e.seq)).toEqual([1, 2, 3]);
+    expect(events.at(-1)).toMatchObject({ kind: "message", text: "two" });
+    const after = fs.readFileSync(file);
+    expect(after.subarray(0, prefix.length).equals(prefix)).toBe(true);
+    expect(after.includes(Buffer.from('"seq":99'))).toBe(false);
+  });
+
+  it("continues seq after a tail cut mid-multibyte character", async () => {
+    await createChannel({ channel: "utf8-torn", by: "main" });
+    await sendMessage({ channel: "utf8-torn", by: "main", text: "one" });
+    const file = eventsPath(
+      "utf8-torn",
+      process.env.TRELLIS_CHANNEL_PROJECT ?? "",
+    );
+    const prefix = fs.readFileSync(file);
+    // Incomplete UTF-8 for U+4E2D (中): first two bytes only.
+    fs.appendFileSync(file, Buffer.from([0xe4, 0xb8]));
+    await sendMessage({ channel: "utf8-torn", by: "main", text: "two" });
+    const events = await readChannelEvents({ channel: "utf8-torn" });
+    expect(events.map((e) => e.seq)).toEqual([1, 2, 3]);
+    const after = fs.readFileSync(file);
+    expect(after.subarray(0, prefix.length).equals(prefix)).toBe(true);
+  });
+
+  it("does not re-issue a consumed seq from a non-monotonic journal tail", async () => {
+    await createChannel({ channel: "nonmono", by: "main" });
+    await sendMessage({ channel: "nonmono", by: "main", text: "one" });
+    await sendMessage({ channel: "nonmono", by: "main", text: "two" });
+    const file = eventsPath(
+      "nonmono",
+      process.env.TRELLIS_CHANNEL_PROJECT ?? "",
+    );
+    // Corrupt the tail so the LAST parseable line carries a LOWER seq
+    // (seq 1) than an earlier event (seq 2). Reconciling to the tail's
+    // last value would re-issue seq 2 and break watcher cursors.
+    fs.writeFileSync(
+      file,
+      fs.readFileSync(file, "utf-8") +
+        JSON.stringify({ seq: 1, kind: "progress", by: "x" }) +
+        "\n",
+    );
+    await sendMessage({ channel: "nonmono", by: "main", text: "three" });
+    const events = await readChannelEvents({ channel: "nonmono" });
+    // create=1, msg one=2, msg two=3, corrupt tail line re-uses seq 1;
+    // the new message must be 4, not a duplicate of 2 or 3.
+    const seqs = events.filter((e) => e.kind === "message").map((e) => e.seq);
+    expect(seqs).toEqual([2, 3, 4]);
+  });
+
   it("fails seq recovery when JSONL has no recoverable seq", async () => {
     await createChannel({ channel: "bad-jsonl", by: "main" });
     const file = eventsPath("bad-jsonl");
