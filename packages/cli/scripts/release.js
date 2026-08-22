@@ -7,7 +7,7 @@
  *   manifest/docs guards -> tests -> pre-release commit -> synchronized bump
  *   -> version check -> version commit -> tag -> push
  */
-import { execSync } from "node:child_process";
+import { execFileSync, execSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -64,7 +64,7 @@ function docsGuard(type) {
   }
 }
 
-const PRERELEASE_TYPES = new Set(["beta", "rc"]);
+const PRERELEASE_TYPES = new Set(["beta", "rc", "promote"]);
 
 function currentBranch() {
   return output("git rev-parse --abbrev-ref HEAD");
@@ -112,8 +112,12 @@ function assertBranchMatchesType(type, branch) {
 function assertPushLanded(branch, tag) {
   run("git fetch origin --quiet");
   try {
-    run(`git merge-base --is-ancestor "${tag}" "origin/${branch}"`, {
-      capture: true,
+    // execFileSync, not string interpolation: the branch name comes from
+    // `git rev-parse` and is interpolated into argv verbatim — a hostile
+    // branch name must never reach a shell.
+    execFileSync("git", ["merge-base", "--is-ancestor", tag, `origin/${branch}`], {
+      cwd: CLI_DIR,
+      stdio: ["pipe", "pipe", "pipe"],
     });
   } catch {
     fail(
@@ -157,7 +161,11 @@ function main() {
   // Push HEAD to the branch we are actually on, by name. `HEAD` alone relies
   // on the remote having a same-named branch, and a bare `main` pushes the
   // local main ref regardless of where the release commit lives.
-  run(`git push origin "HEAD:${branch}" --tags`);
+  // execFileSync keeps the branch name out of any shell.
+  execFileSync("git", ["push", "origin", `HEAD:${branch}`, "--tags"], {
+    cwd: CLI_DIR,
+    stdio: "inherit",
+  });
   assertPushLanded(branch, `v${version}`);
 }
 
