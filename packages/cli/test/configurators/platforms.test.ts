@@ -9,7 +9,12 @@ import {
   PLATFORM_IDS,
 } from "../../src/configurators/index.js";
 import { AI_TOOLS } from "../../src/types/ai-tools.js";
-import { setWriteMode } from "../../src/utils/file-writer.js";
+import {
+  setWriteMode,
+  startRecordingWrites,
+  stopRecordingWrites,
+} from "../../src/utils/file-writer.js";
+import { initializeHashes } from "../../src/utils/template-hash.js";
 import {
   getAllAgents as getAllCodexAgents,
   getConfigTemplate as getCodexConfigTemplate,
@@ -66,7 +71,7 @@ function readConfiguredFile(root: string, relativePath: string): string {
 }
 
 // =============================================================================
-// getConfiguredPlatforms — detects existing platform directories
+// getConfiguredPlatforms — detects Trellis-owned platform files
 // =============================================================================
 
 describe("getConfiguredPlatforms", () => {
@@ -74,9 +79,12 @@ describe("getConfiguredPlatforms", () => {
 
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "trellis-platforms-"));
+    setWriteMode("force");
   });
 
   afterEach(() => {
+    stopRecordingWrites();
+    setWriteMode("ask");
     fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
@@ -85,120 +93,46 @@ describe("getConfiguredPlatforms", () => {
     expect(result.size).toBe(0);
   });
 
-  it("detects .claude directory as claude-code", () => {
-    fs.mkdirSync(path.join(tmpDir, ".claude"));
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("claude-code")).toBe(true);
-  });
-
-  it("detects .cursor directory as cursor", () => {
-    fs.mkdirSync(path.join(tmpDir, ".cursor"));
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("cursor")).toBe(true);
-  });
-
-  it("detects .opencode directory as opencode", () => {
-    fs.mkdirSync(path.join(tmpDir, ".opencode"));
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("opencode")).toBe(true);
-  });
-
-  it("detects .codex directory as codex", () => {
-    fs.mkdirSync(path.join(tmpDir, ".codex"), { recursive: true });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("codex")).toBe(true);
-  });
-
-  it(".agents/skills alone does NOT detect as codex (shared standard)", () => {
-    fs.mkdirSync(path.join(tmpDir, ".agents", "skills"), { recursive: true });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("codex")).toBe(false);
-  });
-
-  it("detects .agent/workflows directory as antigravity", () => {
-    fs.mkdirSync(path.join(tmpDir, ".agent", "workflows"), {
-      recursive: true,
-    });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("antigravity")).toBe(true);
-  });
-
-  it("detects .devin/workflows directory as devin", () => {
-    fs.mkdirSync(path.join(tmpDir, ".devin", "workflows"), {
-      recursive: true,
-    });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("devin")).toBe(true);
-  });
-
-  it("detects legacy .windsurf/workflows directory as devin (back-compat)", () => {
-    fs.mkdirSync(path.join(tmpDir, ".windsurf", "workflows"), {
-      recursive: true,
-    });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("devin")).toBe(true);
-  });
-
-  it("detects .kiro/skills directory as kiro", () => {
-    fs.mkdirSync(path.join(tmpDir, ".kiro", "skills"), { recursive: true });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("kiro")).toBe(true);
-  });
-
-  it("detects .gemini directory as gemini", () => {
-    fs.mkdirSync(path.join(tmpDir, ".gemini"), { recursive: true });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("gemini")).toBe(true);
-  });
-
-  it("detects .qoder directory as qoder", () => {
-    fs.mkdirSync(path.join(tmpDir, ".qoder"), { recursive: true });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("qoder")).toBe(true);
-  });
-
-  it("detects .codebuddy directory as codebuddy", () => {
-    fs.mkdirSync(path.join(tmpDir, ".codebuddy"), { recursive: true });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("codebuddy")).toBe(true);
-  });
-
-  it("detects .github/copilot directory as copilot", () => {
-    fs.mkdirSync(path.join(tmpDir, ".github", "copilot"), { recursive: true });
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("copilot")).toBe(true);
-  });
-
-  it("detects .factory directory as droid", () => {
-    fs.mkdirSync(path.join(tmpDir, ".factory"));
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("droid")).toBe(true);
-  });
-
-  it("detects .pi directory as pi", () => {
-    fs.mkdirSync(path.join(tmpDir, ".pi"));
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.has("pi")).toBe(true);
-  });
-
-  it("detects multiple platforms simultaneously", () => {
+  it("does not treat native platform directories as Trellis installations", () => {
     for (const id of PLATFORM_IDS) {
       fs.mkdirSync(path.join(tmpDir, AI_TOOLS[id].configDir), {
         recursive: true,
       });
     }
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.size).toBe(PLATFORM_IDS.length);
+
+    expect([...getConfiguredPlatforms(tmpDir)]).toEqual([]);
+  });
+
+  it("detects Trellis-namespaced legacy Windsurf workflows as devin", () => {
+    const workflowsDir = path.join(tmpDir, ".windsurf", "workflows");
+    fs.mkdirSync(workflowsDir, { recursive: true });
+    expect(getConfiguredPlatforms(tmpDir).has("devin")).toBe(false);
+
+    fs.writeFileSync(path.join(workflowsDir, "trellis-continue.md"), "# Trellis");
+    expect(getConfiguredPlatforms(tmpDir).has("devin")).toBe(true);
+  });
+
+  it("detects every platform from the files Trellis tracked for it", async () => {
     for (const id of PLATFORM_IDS) {
-      expect(result.has(id)).toBe(true);
+      const platformRoot = path.join(tmpDir, id);
+      fs.mkdirSync(platformRoot, { recursive: true });
+      const written = startRecordingWrites(platformRoot);
+      try {
+        await configurePlatform(id, platformRoot);
+      } finally {
+        stopRecordingWrites();
+      }
+      fs.mkdirSync(path.join(platformRoot, ".trellis"), { recursive: true });
+      initializeHashes(platformRoot, { trackedPaths: written });
+
+      expect([...getConfiguredPlatforms(platformRoot)]).toEqual([id]);
     }
   });
 
   it("ignores unrelated directories", () => {
     fs.mkdirSync(path.join(tmpDir, ".vscode"));
     fs.mkdirSync(path.join(tmpDir, ".git"));
-    const result = getConfiguredPlatforms(tmpDir);
-    expect(result.size).toBe(0);
+    expect(getConfiguredPlatforms(tmpDir).size).toBe(0);
   });
 });
 

@@ -84,12 +84,15 @@ program
   .option("--codebuddy", "Include CodeBuddy commands")
   .option("--copilot", "Include GitHub Copilot hooks")
   .option("--droid", "Include Factory Droid commands")
+  .option("--dsh", "Include DeepSeek Harness (dsh) skills")
   .option("--pi", "Include Pi Agent extension assets")
   .option("--reasonix", "Include Reasonix skills")
   .option("--zcode", "Include ZCode commands")
   .option("--omp", "Include Oh My Pi extension assets")
   .option("--trae", "Include Trae IDE commands")
   .option("--grok", "Include Grok Build skills and agents")
+  .option("--kimi", "Include Kimi Code skills and agents")
+  .option("--snow", "Include Snow CLI skills and commands")
   .option(
     "--with-statusline",
     "Install the Trellis statusLine for Claude Code (off by default)",

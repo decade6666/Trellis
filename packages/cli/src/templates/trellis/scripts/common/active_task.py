@@ -52,10 +52,16 @@ _KNOWN_PLATFORMS = {
     "pi",
     "trae",
     "grok",
+    "kimi",
+    "snow",
+    "dsh",
     "zcode",
 }
 
 _ENV_SESSION_KEYS: tuple[tuple[str, tuple[str, ...]], ...] = (
+    # DSH_SESSION_ID is emitted by DeepSeek Harness and must be checked first:
+    # a dsh shell can inherit an outer host's session variable.
+    ("dsh", ("DSH_SESSION_ID",)),
     # REAL, undocumented (verified 2026-08-05 in a live Claude Code 2.1.221 bash
     # child; absent from code.claude.com/docs/en/env-vars). CLAUDE_SESSION_ID
     # was removed here — verified absent from that same live environment.
@@ -94,6 +100,8 @@ _ENV_SESSION_KEYS: tuple[tuple[str, tuple[str, ...]], ...] = (
     # entry only fires once the resolver detected "zcode" — no collision with
     # the claude entry above.
     ("zcode", ("CLAUDE_CODE_SESSION_ID", "CLAUDE_SESSION_ID")),
+    # Snow CLI exposes its native session identity to hook children.
+    ("snow", ("SNOW_SESSION_ID",)),
 )
 # Cursor, droid/factory, pi and trae have no verified session env name; they
 # resolve through TRELLIS_CONTEXT_ID or the pre-shell ticket bridge instead.

@@ -43,7 +43,7 @@
 | **Task-centered workflow** | Keep PRDs, implementation context, review context, and task status in `.trellis/tasks/` so AI work stays structured. |
 | **Project memory** | Journals in `.trellis/workspace/` preserve what happened last time, so each new session starts with real context. |
 | **Team-shared standards** | Specs live in the repo, so one person's hard-won workflow or rule can benefit the whole team. |
-| **Multi-platform setup** | Bring the same Trellis structure to 17 AI coding platforms instead of rebuilding your workflow per tool. |
+| **Multi-platform setup** | Bring the same Trellis structure to 22 AI coding platforms instead of rebuilding your workflow per tool. |
 | **Optional multi-model collab** | Opt-in Codex / second-model parallel analysis, implement, and cross-review on Trellis channel. Off by default — zero behavior change. |
 
 ## Prerequisites:

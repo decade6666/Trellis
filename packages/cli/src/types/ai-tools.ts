@@ -21,12 +21,15 @@ export type AITool =
   | "codebuddy"
   | "copilot"
   | "droid"
+  | "dsh"
   | "pi"
   | "reasonix"
   | "zcode"
   | "trae"
   | "omp"
-  | "grok";
+  | "grok"
+  | "kimi"
+  | "snow";
 
 /**
  * Template directory categories
@@ -46,12 +49,15 @@ export type TemplateDir =
   | "codebuddy"
   | "copilot"
   | "droid"
+  | "dsh"
   | "pi"
   | "reasonix"
   | "zcode"
   | "trae"
   | "omp"
-  | "grok";
+  | "grok"
+  | "kimi"
+  | "snow";
 
 /**
  * CLI flag names for platform selection (e.g., --claude, --cursor, --kilo, --kiro, --gemini, --antigravity)
@@ -71,12 +77,15 @@ export type CliFlag =
   | "codebuddy"
   | "copilot"
   | "droid"
+  | "dsh"
   | "pi"
   | "reasonix"
   | "zcode"
   | "trae"
   | "omp"
-  | "grok";
+  | "grok"
+  | "kimi"
+  | "snow";
 
 /**
  * Template context for placeholder resolution.
@@ -84,7 +93,14 @@ export type CliFlag =
  */
 export interface TemplateContext {
   /** Prefix for cross-referencing other commands/skills */
-  cmdRefPrefix: "/trellis:" | "/trellis-" | "$" | "/" | "/skill trellis-";
+  cmdRefPrefix:
+    | "/trellis:"
+    | "/trellis-"
+    | "$"
+    | "/"
+    | "/skill trellis-"
+    | "/skill:trellis-"
+    | "trellis-";
   /** Description of AI executor actions shown in role tables */
   executorAI:
     | "Bash scripts or Task calls"
@@ -379,6 +395,23 @@ export const AI_TOOLS: Record<AITool, AIToolConfig> = {
       cliFlag: "droid",
     },
   },
+  dsh: {
+    name: "DeepSeek Harness (dsh)",
+    templateDirs: ["common", "dsh"],
+    configDir: ".dsh",
+    supportsAgentSkills: true,
+    cliFlag: "dsh",
+    defaultChecked: false,
+    hasPythonHooks: false,
+    templateContext: {
+      cmdRefPrefix: "trellis-",
+      executorAI: "Bash scripts or tool calls",
+      userActionLabel: "Skills",
+      agentCapable: true,
+      hasHooks: false,
+      cliFlag: "dsh",
+    },
+  },
   pi: {
     // Pi also writes .agents/skills/, which is read by Cursor, Gemini CLI,
     // GitHub Copilot, Amp, and Kimi Code. Keep that detail out of `name` —
@@ -499,6 +532,45 @@ export const AI_TOOLS: Record<AITool, AIToolConfig> = {
       agentCapable: true,
       hasHooks: false,
       cliFlag: "grok",
+    },
+  },
+  kimi: {
+    name: "Kimi Code",
+    templateDirs: ["common", "kimi"],
+    configDir: ".kimi-code",
+    supportsAgentSkills: true,
+    cliFlag: "kimi",
+    defaultChecked: false,
+    hasPythonHooks: false,
+    templateContext: {
+      cmdRefPrefix: "/skill:trellis-",
+      executorAI: "Bash scripts or Agent calls",
+      userActionLabel: "Slash commands",
+      agentCapable: true,
+      hasHooks: false,
+      cliFlag: "kimi",
+    },
+  },
+  snow: {
+    name: "Snow CLI",
+    templateDirs: ["common", "snow"],
+    configDir: ".snow/skills",
+    extraManagedPaths: [
+      ".snow/commands",
+      ".snow/agents",
+      ".snow/hooks",
+      ".snow/SNOW.md",
+    ],
+    cliFlag: "snow",
+    defaultChecked: false,
+    hasPythonHooks: true,
+    templateContext: {
+      cmdRefPrefix: "/trellis-",
+      executorAI: "Bash scripts or Agent calls",
+      userActionLabel: "Skills",
+      agentCapable: true,
+      hasHooks: true,
+      cliFlag: "snow",
     },
   },
 };

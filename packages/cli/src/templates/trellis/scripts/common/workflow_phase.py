@@ -155,6 +155,7 @@ _PLATFORM_MARKER_LABELS: dict[str, str] = {
     # than silently blanking that platform's routing.
     "claude": "Claude Code",
     "kimi": "Kimi Code",
+    "snow": "Snow",
     "omp": "Oh My Pi",
     "dsh": "DeepSeek Harness",
 }
