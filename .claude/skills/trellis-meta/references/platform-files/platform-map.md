@@ -12,6 +12,8 @@ This page lists common Trellis file locations in a user project by platform. Whe
 | Codex | `--codex` | `.codex/` | `.agents/skills/` | `.codex/agents/` | `.codex/hooks/` + `.codex/hooks.json` |
 | Kilo | `--kilo` | `.kilocode/` | `.kilocode/skills/` | Usually none | `.kilocode/workflows/` |
 | Kiro | `--kiro` | `.kiro/` | `.kiro/skills/` | `.kiro/agents/` | `.kiro/hooks/` |
+| Kimi Code | `--kimi` | `.kimi-code/` | `.agents/skills/` + `.kimi-code/skills/` | `.kimi-code/agents/` | None — pull-based |
+| DeepSeek Harness (dsh) | `--dsh` | `.dsh/` | `.agents/skills/` + `.dsh/skills/` | None — inline | None — pull-based |
 | Gemini CLI | `--gemini` | `.gemini/` | `.agents/skills/` | `.gemini/agents/` | `.gemini/settings.json` + `.gemini/hooks/` |
 | Antigravity | `--antigravity` | `.agent/` | `.agent/skills/` | Usually none | `.agent/workflows/` |
 | Devin | `--devin` | `.devin/` | `.devin/skills/` | Usually none | `.devin/workflows/` |
@@ -20,7 +22,10 @@ This page lists common Trellis file locations in a user project by platform. Whe
 | GitHub Copilot | `--copilot` | `.github/` | `.github/skills/` | `.github/agents/` | `.github/copilot/hooks/` + prompts |
 | Factory Droid | `--droid` | `.factory/` | `.factory/skills/` | `.factory/droids/` | `.factory/hooks/` + settings |
 | Pi Agent | `--pi` | `.pi/` | `.pi/skills/` | `.pi/agents/` | `.pi/extensions/trellis/` (native `trellis_subagent` tool) + `.pi/settings.json` |
+| Oh My Pi | `--omp` | `.omp/` | `.omp/skills/` | `.omp/agents/` | `.omp/extensions/trellis/` + `.omp/commands/` |
+| Grok Build | `--grok` | `.grok/` | `.grok/skills/` | `.grok/agents/` | `.grok/commands/` |
 | Trae IDE | `--trae` | `.trae/` | `.trae/skills/` | `.trae/agents/` | `.trae/hooks/` + `.trae/hooks.json` |
+| Snow CLI | `--snow` | `.snow/` | `.snow/skills/` | `.snow/agents/` | `.snow/hooks/` + `.snow/commands/` |
 | Reasonix | `--reasonix` | `.reasonix/` | `.reasonix/skills/` | None — sub-agents are skills with `runAs: subagent` frontmatter | None |
 | ZCode | `--zcode` | `.zcode/` | `.zcode/skills/` | `.zcode/agents/` | pull-based prelude (no hooks) |
 
@@ -35,6 +40,7 @@ These platforms usually have `trellis-research`, `trellis-implement`, and `trell
 - OpenCode
 - Codex
 - Kiro
+- Kimi Code
 - Gemini CLI
 - Qoder
 - CodeBuddy
@@ -42,6 +48,7 @@ These platforms usually have `trellis-research`, `trellis-implement`, and `trell
 - Factory Droid
 - Pi Agent
 - Trae IDE
+- Snow CLI
 - Reasonix (delivered as skills with `runAs: subagent` under `.reasonix/skills/`, not as a separate `agents/` directory)
 - ZCode
 
@@ -60,6 +67,7 @@ When changing sub-agent dispatch behavior on these platforms, edit the extension
 These platforms rely more on workflows/skills to guide the main session:
 
 - Kilo
+- DeepSeek Harness (dsh)
 - Antigravity
 - Devin
 
@@ -67,7 +75,7 @@ When changing behavior, inspect workflows and skills first. Do not assume Trelli
 
 ### Shared `.agents/skills/`
 
-Codex and Gemini CLI write the shared `.agents/skills/` layer. Some tools that support agentskills.io can also read this directory. If the user wants multiple compatible tools to share one skill, consider `.agents/skills/` first, but do not assume every platform reads it. ZCode keeps Trellis-managed skills under `.zcode/skills/`.
+Codex, Gemini CLI, Kimi Code, and DeepSeek Harness (dsh) write or consume the shared `.agents/skills/` layer. Some tools that support agentskills.io can also read this directory. If the user wants multiple compatible tools to share one skill, consider `.agents/skills/` first, but do not assume every platform reads it. ZCode keeps Trellis-managed skills under `.zcode/skills/`.
 
 ## Decision Rules When Modifying Platform Files
 

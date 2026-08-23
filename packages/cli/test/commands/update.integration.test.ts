@@ -796,7 +796,7 @@ describe("update() integration", () => {
     expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).toBe(expectedWorkflow);
     expect(readProjectFile(MANAGED_FILE)).toBe(expectedGetContext);
     expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).toContain(
-      "[codex-inline, Kilo, Antigravity, Devin]",
+      "[codex-inline, Kilo, Antigravity, Devin, DeepSeek Harness]",
     );
     expect(readProjectFile(PATHS.WORKFLOW_GUIDE_FILE)).not.toContain("[Codex]");
 
@@ -1519,12 +1519,14 @@ describe("update() integration", () => {
     const updated = fs.readFileSync(workflowPath, "utf-8");
     expect(updated).toBe(replacePythonCommandLiterals(workflowMdTemplate));
     expect(updated).toContain(
-      "[codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae, Grok]",
+      "[codex-sub-agent, Gemini, Qoder, Copilot, ZCode, Reasonix, Trae, Grok, Kimi Code]",
     );
     expect(updated).toContain(
-      "[/Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi, Oh My Pi]",
+      "[/Claude Code, Cursor, OpenCode, CodeBuddy, Droid, Pi, Oh My Pi, Snow]",
     );
-    expect(updated).toContain("[codex-inline, Kilo, Antigravity, Devin]");
+    expect(updated).toContain(
+      "[codex-inline, Kilo, Antigravity, Devin, DeepSeek Harness]",
+    );
     expect(updated).not.toContain("[Codex]");
     expect(updated).not.toContain("[Kilo, Antigravity, Windsurf]");
     expect(updated).not.toContain("legacy body");

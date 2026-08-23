@@ -28,8 +28,12 @@ Common files:
 | Factory Droid | `.factory/settings.json` |
 | Pi Agent | `.pi/settings.json`, `.pi/extensions/trellis/` |
 | Trae IDE | `.trae/hooks.json` |
+| Snow CLI | `.snow/hooks/*.json`, `.snow/hooks/write-trellis-context.py` |
+| Grok Build | None — pull-based |
+| Kimi Code | None — pull-based |
+| DeepSeek Harness (dsh) | None — pull-based |
 
-Reasonix and ZCode are pull-based platforms that do not use hooks or settings files; their agent files contain prelude instructions to read context after startup.
+Reasonix, ZCode, Grok, Kimi Code, and DeepSeek Harness are pull-based platforms that do not use hooks or settings files; their skill/agent files contain prelude instructions to read context after startup. Snow is hook-backed and uses its own JSON hook registrations.
 
 Whether these files exist in a project depends on which `trellis init --<platform>` flags the user ran.
 
