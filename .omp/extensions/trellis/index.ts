@@ -1,6 +1,25 @@
 import type { ExtensionAPI } from "@oh-my-pi/pi-coding-agent";
-import { closeSync, existsSync, fstatSync, lstatSync, openSync, readFileSync, readdirSync, realpathSync, statSync, readSync } from "node:fs";
-import { join, dirname, basename, isAbsolute, relative, resolve } from "node:path";
+import {
+  closeSync,
+  existsSync,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  statSync,
+  readSync,
+} from "node:fs";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 
@@ -53,9 +72,12 @@ function deriveContextKey(ctx?: { sessionManager?: { getSessionId?: () => string
    return override ? sanitizeKey(override) || hashValue(override) : null;
 }
 
+// Byte-comparable with CLI context-loader isUnderRoot(real, root):
+//   real === root || real.startsWith(root + path.sep)
+// path.relative-based checks diverge when root is "/" (they treat every
+// absolute path as inside the filesystem root); do not reintroduce them.
 function isInsideRoot(root: string, candidate: string): boolean {
-   const rel = relative(root, candidate);
-   return rel === "" || (rel !== ".." && !rel.startsWith("../") && !rel.startsWith("..\\") && !isAbsolute(rel));
+   return candidate === root || candidate.startsWith(root + sep);
 }
 
 // ---------------------------------------------------------------------------
